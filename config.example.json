@@ -1,0 +1,26 @@
+{
+  "wifi": {
+    "ssid": "YOUR_WIFI_SSID",
+    "password": "YOUR_WIFI_PASSWORD"
+  },
+  "fritzbox": {
+    "host": "192.168.178.1",
+    "port": 49000,
+    "ssl_port": 49443,
+    "use_ssl": false,
+    "username": "fritz_api_user",
+    "password": "YOUR_FRITZBOX_PASSWORD"
+  },
+  "web": {
+    "port": 80,
+    "admin_password": "admin"
+  },
+  "ntp": {
+    "server": "pool.ntp.org",
+    "timezone_offset_hours": 1
+  },
+  "system": {
+    "watchdog_timeout_sec": 60,
+    "log_level": "INFO"
+  }
+}
