@@ -8,7 +8,7 @@ Every milestone must end with code verification, test passing, and a completed *
 
 | Phase | Description | Status | Decision Report |
 |---|---|---|---|
-| **Phase 0** | Project Structure, Environment & Agent Rules | 🟡 In Progress | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
+| **Phase 0** | Project Structure, Environment & Agent Rules | 🟢 Completed | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
 | **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | ⚪ Not Started | - |
 | **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | ⚪ Not Started | - |
 | **Phase 3** | Timers, Scheduling & State Persistence | ⚪ Not Started | - |
@@ -20,14 +20,14 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ## Detailed Milestone Backlog
 
-### Phase 0: Project Setup & Agent Framework 🟡
+### Phase 0: Project Setup & Agent Framework 🟢
 - [x] Create project modular structure (`src/`, `docs/`, `www/`, `tests/`, `tools/`).
 - [x] Configure `.gitignore` and `config.example.json` (prevent credential leakage).
 - [x] Define `AGENTS.md` with hardware limits, rules, and Decision Report requirement.
 - [x] Create `docs/decisions/TEMPLATE.md` for consistent feature documentation.
-- [ ] Initialize Git repository.
-- [ ] Create `tools/flash.py` and `tools/deploy.py` helper scripts for `mpremote`/`esptool`.
-- [ ] Complete **[DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md)**.
+- [x] Initialize Git repository.
+- [x] Create `tools/flash.py` and `tools/deploy.py` helper scripts for `mpremote`/`esptool`.
+- [x] Complete **[DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md)**.
 
 ---
 
