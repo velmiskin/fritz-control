@@ -1,0 +1,30 @@
+# Secrets and local credentials
+config.json
+.env
+*.key
+*.pem
+credentials.json
+
+# MicroPython firmware and binaries
+firmware/*.bin
+*.bin
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs and temporary files
+*.log
+temp*
+*.tmp
+
+# Editor and OS
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
