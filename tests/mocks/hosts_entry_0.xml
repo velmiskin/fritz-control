@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body>
+    <u:GetGenericHostEntryResponse xmlns:u="urn:dslforum-org:service:Hosts:1">
+      <NewIPAddress>192.168.178.20</NewIPAddress>
+      <NewAddressSource>DHCP</NewAddressSource>
+      <NewLeaseTimeRemaining>86400</NewLeaseTimeRemaining>
+      <NewMACAddress>AA:BB:CC:DD:EE:01</NewMACAddress>
+      <NewInterfaceType>802.11</NewInterfaceType>
+      <NewActive>1</NewActive>
+      <NewHostName>Kids-Tablet</NewHostName>
+    </u:GetGenericHostEntryResponse>
+  </s:Body>
+</s:Envelope>
