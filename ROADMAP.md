@@ -9,7 +9,7 @@ Every milestone must end with code verification, test passing, and a completed *
 | Phase | Description | Status | Decision Report |
 |---|---|---|---|
 | **Phase 0** | Project Structure, Environment & Agent Rules | 🟢 Completed | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
-| **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | ⚪ Not Started | - |
+| **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟢 Completed | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md) |
 | **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | ⚪ Not Started | - |
 | **Phase 3** | Timers, Scheduling & State Persistence | ⚪ Not Started | - |
 | **Phase 4** | Web Server & Dashboard UI | ⚪ Not Started | - |
@@ -31,14 +31,14 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ---
 
-### Phase 1: TR-064 Core & Device Discovery (`Hosts:1`) ⚪
-- [ ] Implement `src/core/config.py` (safe JSON config loader).
-- [ ] Implement `src/fritz/soap.py` (MicroPython lightweight SOAP 1.1 HTTP request generator & basic auth/digest support).
-- [ ] Implement `src/fritz/tr064.py` (TR-064 service descriptor parser & endpoint dispatcher).
-- [ ] Implement `src/fritz/hosts.py` (`GetHostNumberOfEntries`, `GetGenericHostEntryByNewIndex` / `X_AVM-DE_GetHostList`).
-- [ ] Create mock SOAP responses in `tests/mocks/` for local testing.
-- [ ] Write unit tests `tests/test_soap.py` and `tests/test_hosts.py`.
-- [ ] Complete **DR-001: TR-064 SOAP Client & Device Discovery**.
+### Phase 1: TR-064 Core & Device Discovery (`Hosts:1`) 🟢
+- [x] Implement `src/core/config.py` (safe JSON config loader).
+- [x] Implement `src/fritz/soap.py` (MicroPython lightweight SOAP 1.1 HTTP request generator & parser).
+- [x] Implement `src/fritz/tr064.py` (TR-064 client with transparent HTTP Digest Authentication).
+- [x] Implement `src/fritz/hosts.py` (`GetHostNumberOfEntries`, `GetGenericHostEntry`, `X_AVM-DE_GetSpecificHostEntryByIP`).
+- [x] Create mock SOAP responses in `tests/mocks/` for local testing.
+- [x] Write unit tests `tests/test_config.py`, `tests/test_soap.py`, and `tests/test_hosts.py`.
+- [x] Complete **[DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md)**.
 
 ---
 

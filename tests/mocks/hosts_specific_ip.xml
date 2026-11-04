@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body>
+    <u:X_AVM-DE_GetSpecificHostEntryByIPResponse xmlns:u="urn:dslforum-org:service:Hosts:1">
+      <NewIPAddress>192.168.178.20</NewIPAddress>
+      <NewMACAddress>AA:BB:CC:DD:EE:01</NewMACAddress>
+      <NewActive>1</NewActive>
+      <NewHostName>Kids-Tablet</NewHostName>
+      <NewInterfaceType>802.11</NewInterfaceType>
+      <NewX_AVM-DE_FriendlyName>Kid Tablet Pro</NewX_AVM-DE_FriendlyName>
+      <NewX_AVM-DE_WANAccess>granted</NewX_AVM-DE_WANAccess>
+      <NewX_AVM-DE_Disallow>0</NewX_AVM-DE_Disallow>
+    </u:X_AVM-DE_GetSpecificHostEntryByIPResponse>
+  </s:Body>
+</s:Envelope>
