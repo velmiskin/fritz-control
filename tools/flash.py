@@ -18,11 +18,11 @@ def main():
     firmware_path = sys.argv[2]
 
     print(f"Erasing flash on {port}...")
-    subprocess.run(f"esptool.py --port {port} erase_flash", shell=True, check=True)
+    subprocess.run(f"python -m esptool --port {port} erase_flash", shell=True, check=True)
 
     print(f"Flashing firmware {firmware_path} to {port}...")
     subprocess.run(
-        f"esptool.py --chip esp32 --port {port} --baud 460800 write_flash -z 0x1000 {firmware_path}",
+        f"python -m esptool --chip esp32 --port {port} --baud 460800 write_flash -z 0x1000 {firmware_path}",
         shell=True,
         check=True
     )
