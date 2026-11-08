@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body>
+    <u:GetHostEntryByIPResponse xmlns:u="urn:dslforum-org:service:X_AVM-DE_HostFilter:1">
+      <NewHostName>Kids-Tablet</NewHostName>
+      <NewFilterProfileID>2</NewFilterProfileID>
+      <NewTimeUsed>1800</NewTimeUsed>
+      <NewTimeMax>7200</NewTimeMax>
+      <NewTicketsInAdvance>0</NewTicketsInAdvance>
+      <NewTicketValid>0</NewTicketValid>
+      <NewIsTimeShared>0</NewIsTimeShared>
+      <NewWANAccess>granted</NewWANAccess>
+    </u:GetHostEntryByIPResponse>
+  </s:Body>
+</s:Envelope>

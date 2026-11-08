@@ -10,7 +10,7 @@ Every milestone must end with code verification, test passing, and a completed *
 |---|---|---|---|
 | **Phase 0** | Project Structure, Environment & Agent Rules | 🟢 Completed | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
 | **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟢 Completed | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md) |
-| **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | ⚪ Not Started | - |
+| **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟢 Completed | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md) |
 | **Phase 3** | Timers, Scheduling & State Persistence | ⚪ Not Started | - |
 | **Phase 4** | Web Server & Dashboard UI | ⚪ Not Started | - |
 | **Phase 5** | Security, Authentication & WireGuard Remote Access | ⚪ Not Started | - |
@@ -42,14 +42,14 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ---
 
-### Phase 2: WAN Access Control & Verification (`HostFilter:1`) ⚪
-- [ ] Implement `src/fritz/host_filter.py`.
-- [ ] Implement `DisallowWANAccessByIP` (block WAN access for IPv4).
-- [ ] Implement `GetWANAccessByIP` (query actual current WAN state).
-- [ ] Add post-command state verification loop (handling asynchronous router updates).
-- [ ] Add batch blocking/unblocking with rate limiting.
-- [ ] Write unit tests `tests/test_host_filter.py`.
-- [ ] Complete **DR-002: WAN HostFilter Control & State Verification**.
+### Phase 2: WAN Access Control & Verification (`HostFilter:1`) 🟢
+- [x] Implement `src/fritz/host_filter.py`.
+- [x] Implement `DisallowWANAccessByIP` (block WAN access for IPv4).
+- [x] Implement `GetWANAccessByIP` (query actual current WAN state).
+- [x] Add post-command state verification loop (handling asynchronous router updates).
+- [x] Add batch blocking/unblocking with rate limiting.
+- [x] Write unit tests `tests/test_host_filter.py`.
+- [x] Complete **[DR-002](docs/decisions/DR-002-wan-hostfilter-control.md)**.
 
 ---
 
