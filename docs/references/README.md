@@ -22,6 +22,6 @@ Decision Report:
 4. Required user rights.
 5. Result of a non-destructive or explicitly authorised hardware check.
 
-`PROJECT_SPEC.md` is preserved as a raw design-session export. It contains UI
-markup and historical generated citations, so it is informative only and must
-not be used to justify protocol details.
+The original design-session export was removed after its durable requirements
+were incorporated into `AGENTS.md` and `ROADMAP.md`. It remains recoverable from
+Git history but is not a normative project document.

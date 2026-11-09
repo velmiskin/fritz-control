@@ -39,7 +39,7 @@ A rigid agentic framework with strict guardrails and mandatory post-feature deci
 - Directory scaffold verified with all required subdirectories (`src/`, `www/`, `tests/`, `tools/`, `docs/decisions/`).
 - Initial skeletons created: `src/boot.py`, `src/main.py`, `tools/deploy.py`, `tools/flash.py`.
 - `config.example.json` parsed successfully as JSON. No project JSON Schema exists yet.
-- Spec from design session archived in `docs/references/PROJECT_SPEC.md`.
+- Initial design-session requirements were consolidated into `AGENTS.md` and `ROADMAP.md`; the raw export was later removed and remains available in Git history.
 
 ## 6. Alternatives Considered & Trade-offs
 - *Alternative 1: Monolithic `main.py`.* Rejected because large files degrade agent reasoning, create merge conflicts, and hinder unit testing.

@@ -36,7 +36,7 @@ Every milestone must end with code verification, test passing, and a completed *
 - [x] Pin the verified host-side toolchain and centralize pytest configuration.
 - [x] Remove the known web password from the example configuration and ignore `.venv/`.
 - [x] Add host-side CI for tests and CPython compilation checks.
-- [x] Index normative FRITZ!/MicroPython references and mark the legacy design export non-normative.
+- [x] Index normative FRITZ!/MicroPython references and remove the superseded raw design-session export.
 - [x] Separate estimates, mock results, transport tests and hardware evidence in Decision Reports.
 - [x] Complete **[DR-003](docs/decisions/DR-003-development-workflow-and-evidence.md)**.
 

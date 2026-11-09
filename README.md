@@ -84,8 +84,6 @@ verification. Review their output before resetting the device.
 - `ROADMAP.md` is the authoritative progress tracker.
 - `docs/decisions/` records accepted implementation decisions and evidence.
 - `docs/references/README.md` lists normative external specifications.
-- `docs/references/PROJECT_SPEC.md` is a legacy design-session export and is not
-  a normative source.
 
 ## Definition of done
 
