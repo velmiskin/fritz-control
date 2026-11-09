@@ -4,6 +4,8 @@
 **Status:** Accepted  
 **Author:** AI Agent & Engineering Team  
 **Related Milestone/Feature:** Phase 2 — WAN Access Control & Verification (`HostFilter:1`)
+**Evidence Level:** Unit/mock tested; prior live SCPD inspection recorded, ESP32 acceptance pending<br>
+**Tested Versions:** CPython host tests; MicroPython and FRITZ!OS versions not recorded
 
 ---
 
@@ -20,14 +22,15 @@ Specific technical constraints and challenges:
    - Implemented `disallow_wan_access_by_ip(ip_address, disallow=True)`: executes `DisallowWANAccessByIP` with parameter `NewDisallow="1"` (block) or `"0"` (unblock).
    - Implemented `get_host_entry_by_ip(ip_address)`: queries `GetHostEntryByIP` to retrieve filter profile ID and time budget details.
 2. **Post-Command Verification Loop (`set_wan_access_and_verify`):**
-   - After dispatching `DisallowWANAccessByIP`, the service polls `GetWANAccessByIP` in a loop with exponential/configurable delays (`retries=3`, `delay_sec=1`) until the reported state matches the requested state.
+   - After dispatching `DisallowWANAccessByIP`, the service polls `GetWANAccessByIP` with a configurable constant delay (`retries=3`, `delay_sec=1`) until the reported `NewDisallow` flag matches the request.
    - Returns a `verified: True/False` flag in the result payload.
+   - Limitation: clearing `NewDisallow` does not prove effective WAN access because the device's filter profile can still yield `NewWANAccess="denied"`. Phase 2.5 must correct this result contract before scheduling builds on it.
 3. **Sequential Rate-Limited Batch Processing (`set_batch_wan_access`):**
    - Iterates through a target list of IPv4 addresses sequentially with `await asyncio.sleep(delay_between_sec)` (default 200ms) between devices to prevent router connection refusal and socket exhaustion.
 
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 - **RAM / Memory Allocation:**
-  - Operates using string slicing parsing (`parse_soap_response`), allocating minimal heap memory (< 300 bytes per call).
+  - Operates using targeted string parsing instead of an XML DOM. Exact peak heap allocation has not been measured and the transport currently buffers the complete response body.
   - Single active socket connection at any point in time.
 - **Async Event Loop:**
   - Uses `uasyncio.sleep` between verification attempts and batch elements; the event loop remains completely non-blocking, allowing background tasks and the web server to remain responsive.
@@ -40,6 +43,7 @@ Specific technical constraints and challenges:
 - **Router SCPD Validation:**
   - Action signatures inspected directly on the FRITZ!Box 6690 Cable via `http://192.168.178.1:49000/x_hostfilterSCPD.xml`.
   - Confirmed action names: `DisallowWANAccessByIP`, `GetWANAccessByIP`, `GetHostEntryByIP`.
+  - This was a manual check recorded by the prior development session; the router and firmware versions were not captured in a repeatable acceptance record.
 - **Automated Unit & Mock Tests (`tests/test_host_filter.py`):**
   - Tested `get_wan_access_by_ip` for both allowed and disallowed mock states.
   - Tested `disallow_wan_access_by_ip` parameter serialization (`NewDisallow` 1 vs 0).
@@ -47,6 +51,7 @@ Specific technical constraints and challenges:
   - Tested `set_batch_wan_access` sequential execution across multiple target IPs.
   - Tested `get_host_entry_by_ip` extraction of time and profile metadata.
   - Result: **22 passed in 1.36s** via `pytest`.
+- **Known gaps:** effective unblock verification, `WANAccess="error"`, transport faults/timeouts, invalid IPv4 input, bounded memory, HTTPS, and target-hardware acceptance.
 
 ## 6. Alternatives Considered & Trade-offs
 - *Alternative 1: Fire-and-forget commands without verification.* Rejected because network drops or router busy states can lead to silent failure, leaving internet unblocked when parental control expects it blocked.

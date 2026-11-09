@@ -32,13 +32,13 @@ A rigid agentic framework with strict guardrails and mandatory post-feature deci
 - **Flash / NVS Storage:** NV storage operations must write only on state changes (not periodic polling) to preserve flash write cycles.
 
 ## 4. Security & Fault Tolerance
-- **Secret Isolation:** Created `.gitignore` excluding `config.json`, `.env`, and credentials. `config.example.json` provides safe defaults.
+- **Secret Isolation:** Created `.gitignore` excluding `config.json`, `.env`, and credentials. `config.example.json` now contains placeholders rather than a known web password. The runtime default in `src/core/config.py` remains development-only and must be removed before the web API is exposed.
 - **Fail-safe Reboot Rule:** In the event of an ESP32 watchdog reset or power loss, devices must **never** be inadvertently unblocked until stored timer state is reconciled with NTP and current router state.
 
 ## 5. Verification & Testing Results
 - Directory scaffold verified with all required subdirectories (`src/`, `www/`, `tests/`, `tools/`, `docs/decisions/`).
 - Initial skeletons created: `src/boot.py`, `src/main.py`, `tools/deploy.py`, `tools/flash.py`.
-- `config.example.json` validated against JSON schema parser.
+- `config.example.json` parsed successfully as JSON. No project JSON Schema exists yet.
 - Spec from design session archived in `docs/references/PROJECT_SPEC.md`.
 
 ## 6. Alternatives Considered & Trade-offs

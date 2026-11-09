@@ -4,6 +4,8 @@
 **Status:** Accepted  
 **Author:** AI Agent & Engineering Team  
 **Related Milestone/Feature:** Phase 1 — TR-064 Core & Device Discovery (`Hosts:1`)
+**Evidence Level:** Unit/mock tested; prior live router check recorded, ESP32 acceptance pending<br>
+**Tested Versions:** CPython host tests; MicroPython and heap metrics not recorded
 
 ---
 
@@ -33,8 +35,8 @@ Key challenges and constraints:
 
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 - **RAM / Memory Allocation:**
-  - Parsing a 1KB SOAP response via string slicing allocates < 200 bytes of memory compared to > 15KB with a full DOM tree.
-  - Responses are received and processed in 1024-byte chunks.
+  - Targeted string parsing avoids allocating an XML DOM.
+  - The current transport receives 1024-byte chunks but accumulates them before joining the complete body. Peak heap use is not bounded or measured yet and must be addressed in Phase 2.5.
   - `gc.collect()` called immediately after connection teardown.
 - **Async Event Loop:**
   - All network I/O utilizes non-blocking `asyncio` / `uasyncio` streams with strict 10-second timeouts, preventing hangs if the router is busy.
@@ -54,9 +56,11 @@ Key challenges and constraints:
     - SOAP Fault 714 parsing.
     - HTTP Digest Authorization header calculation.
     - `HostsService` methods (`get_host_number_of_entries`, `get_generic_host_entry`, `get_specific_host_by_ip`, `get_all_hosts`).
-  - Result: **16 passed in 0.09s** via `pytest`.
+  - Historical result at milestone completion: **16 passed in 0.09s** via `pytest`.
 - **Live Router Connectivity Check:**
   - Successfully retrieved `tr64desc.xml` and `hostsSCPD.xml` directly from FRITZ!Box 6690 Cable (`192.168.178.1:49000`), verifying actual action definitions.
+  - This was a manual check recorded by the prior development session. The repository does not yet contain a repeatable hardware acceptance script or the tested FRITZ!OS/MicroPython versions.
+- **Known gaps:** byte-accurate HTTP framing, bounded response size, HTTPS behavior, wire-level Digest tests, and ESP32 heap measurements remain pending.
 
 ## 6. Alternatives Considered & Trade-offs
 - *Alternative 1: `micropython-xml` or regex-based tree parser.* Rejected because tree construction uses excessive heap and is prone to fragmentation.

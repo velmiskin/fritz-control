@@ -10,6 +10,7 @@ firmware/*.bin
 *.bin
 
 # Python artifacts
+.venv/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,7 +20,7 @@ htmlcov/
 
 # Logs and temporary files
 *.log
-temp*
+temp*/
 *.tmp
 
 # Editor and OS

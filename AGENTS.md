@@ -18,6 +18,8 @@
   2. Create a new Decision Report in `docs/decisions/DR-XXX-<feature-name>.md` based on `docs/decisions/TEMPLATE.md`.
   3. Update `ROADMAP.md` (check off items and link the Decision Report).
   4. Present the decision summary and verification results to the user before moving to the next task.
+- A green CPython mock suite does not imply ESP32 or router acceptance. Report evidence as one of: design only, unit/mock tested, transport tested, or hardware accepted.
+- Never state estimated RAM usage, latency, compatibility, or hardware behavior as an observed result. Record the measurement method and tested versions for observed claims.
 
 ### Rule 2: MicroPython & Memory Constraints
 - Target platform is **MicroPython** on microcontroller hardware.
@@ -40,6 +42,8 @@
   - `urn:dslforum-org:service:X_AVM-DE_HostFilter:1` (WAN access blocking: `DisallowWANAccessByIP`, `GetWANAccessByIP`).
 - Always check the HTTP status code and parse `<detail>` in SOAP Fault responses.
 - Router changes take effect asynchronously; always verify device WAN status after executing a block/unblock command.
+- Check `docs/references/README.md` and the target router's live SCPD. Optional actions must be capability-detected instead of inferred only from a FRITZ!OS version.
+- For unblock operations, distinguish clearing `NewDisallow` from effective `NewWANAccess="granted"`; a filter profile can continue to deny WAN access.
 
 ### Rule 5: Security & Reboot Behavior
 - Secrets (`config.json`, Wi-Fi credentials, FRITZ!Box passwords) must NEVER be committed to Git or printed in logs/UART console.
@@ -80,3 +84,5 @@ When working on code:
 3. Run tests using `python -m pytest tests/` or custom runner.
 4. Document the completed feature in `docs/decisions/DR-XXX-<name>.md`.
 5. Check off the corresponding box in `ROADMAP.md`.
+
+For transport, timing, persistence, or memory-sensitive work, CPython unit tests are necessary but insufficient. Add the relevant transport tests and record target-hardware verification, or leave hardware acceptance explicitly pending.
