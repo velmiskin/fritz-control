@@ -7,7 +7,10 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from services.scheduler import Scheduler, SchedulerError, WeeklyPolicy
+from core.storage import StorageError
+from services.scheduler import (
+    Scheduler, SchedulerError, WeeklyPolicy, WeeklyPolicyStore,
+)
 
 
 def unix(year, month, day, hour=0, minute=0):
@@ -148,3 +151,41 @@ def test_unverified_weekly_change_is_retried_not_cached():
     with pytest.raises(SchedulerError):
         asyncio.run(scheduler.tick())
     assert len(router.calls) == 2
+
+
+def test_weekly_policy_store_round_trip_and_backup_fallback(tmp_path):
+    store = WeeklyPolicyStore(str(tmp_path / "policies.json"))
+    first = [{
+        "ip": "192.168.178.30",
+        "intervals": [{"day": 0, "start_minute": 60, "end_minute": 120}],
+    }]
+    second = [{
+        "ip": "192.168.178.40",
+        "intervals": [{"day": 1, "start_minute": 120, "end_minute": 180}],
+    }]
+    assert store.load() == []
+    assert store.save(first) is True
+    assert store.save(first) is False
+    store.save(second)
+    (tmp_path / "policies.json").write_text("invalid", encoding="utf-8")
+    assert store.load() == first
+
+
+def test_replace_policies_persists_before_runtime_activation():
+    class FailingStore:
+        def save(self, policies):
+            raise StorageError("flash full")
+
+    original = WeeklyPolicy("192.168.178.30", [
+        {"day": 0, "start_minute": 60, "end_minute": 120},
+    ])
+    scheduler = Scheduler(
+        FakeAccessManager(), FakeHostFilter(), FakeClock(0), [original],
+        policy_store=FailingStore(),
+    )
+    with pytest.raises(StorageError):
+        scheduler.replace_policies([{
+            "ip": "192.168.178.40",
+            "intervals": [{"day": 1, "start_minute": 60, "end_minute": 120}],
+        }])
+    assert scheduler.list_policies() == [original.as_dict()]

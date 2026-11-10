@@ -57,6 +57,10 @@ interpreted as an empty, safe-to-unblock state.
   every timer and weekly-policy device without changing router state. Then
   restore missing blocks, clear stale records, and perform expired unblocks last.
   Open the scheduler gate only after every recovery action succeeds.
+- Persist up to 64 weekly policies in a separate bounded 16 KiB versioned JSON
+  document using the same temporary/backup rotation. Persist a replacement
+  before activating it in memory so a Flash error cannot create runtime-only
+  schedules that disappear on reboot.
 
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 
@@ -95,6 +99,7 @@ interpreted as an empty, safe-to-unblock state.
   3.15.2.
 - Full host result after the recovery milestone: **96 tests passed** on Python
   3.15.2.
+- Final Phase 3 host result: **98 tests passed** on Python 3.15.2.
 - NTP tests cover DNS A parsing, hostname resolution, matching request tokens,
   bounded retry/timeout behavior, UTC RTC conversion and leap-day handling.
 - Access-manager tests cover block-before-persist ordering, trusted-time and
@@ -106,6 +111,8 @@ interpreted as an empty, safe-to-unblock state.
 - Recovery tests prove that all reads precede actions, safe-direction blocks
   precede unblocks, stale/profile-denied timers require no WAN change, and time,
   read or verification failures keep the scheduler gate closed.
+- Policy-store tests cover deterministic round trips, unchanged-write
+  suppression, backup fallback and persistence-before-activation ordering.
 - `python tools/hardware_ntp.py COM3 --config config.json` connected the target
   ESP32 to Wi-Fi, resolved the configured NTP hostname through the interface DNS
   server, accepted a stratum-2 response, and set the RTC to 2026 UTC. Observed
@@ -128,8 +135,8 @@ interpreted as an empty, safe-to-unblock state.
 
 ## 7. Next Steps
 
-Persist weekly policies, then integrate Phase 3 services into the application
-entrypoint before exposing them through the authenticated web API.
+Build the bounded authenticated HTTP/API layer and integrate these services into
+the application entrypoint for Phase 4 hardware acceptance.
 
 ## 8. Traceability
 

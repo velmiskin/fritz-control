@@ -5,14 +5,26 @@ try:
 except ImportError:
     import asyncio
 
+try:
+    import ujson as json
+except ImportError:
+    import json
+
+try:
+    import uos as os
+except ImportError:
+    import os
+
 from core.logger import log
 from fritz.tr064 import TR064Error
 from fritz.validation import validate_ipv4
-from services.access_manager import AccessManagerError
+from core.storage import StorageError
 
 
 MINUTES_PER_DAY = 24 * 60
 SECONDS_PER_DAY = 24 * 60 * 60
+MAX_POLICIES = 64
+MAX_POLICY_BYTES = 16 * 1024
 
 
 class SchedulerError(Exception):
@@ -71,9 +83,134 @@ class WeeklyPolicy:
         }
 
 
+class WeeklyPolicyStore:
+    def __init__(self, path="weekly_policies.json"):
+        if not isinstance(path, str) or not path:
+            raise ValueError("Policy storage path must be a non-empty string")
+        self.path = path
+        self.temp_path = path + ".tmp"
+        self.backup_path = path + ".bak"
+
+    @staticmethod
+    def _exists(path):
+        try:
+            os.stat(path)
+            return True
+        except OSError:
+            return False
+
+    @staticmethod
+    def _remove(path):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+    @staticmethod
+    def _normalize(policies):
+        if not isinstance(policies, list) or len(policies) > MAX_POLICIES:
+            raise StorageError("Weekly policy list is invalid or exceeds limit")
+        normalized = []
+        seen = set()
+        for value in policies:
+            try:
+                policy = value if isinstance(value, WeeklyPolicy) else WeeklyPolicy(
+                    value["ip"], value["intervals"]
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                raise StorageError("Weekly policy is invalid") from exc
+            if policy.ip in seen:
+                raise StorageError("Duplicate weekly policy device")
+            seen.add(policy.ip)
+            normalized.append(policy.as_dict())
+        normalized.sort(key=lambda item: item["ip"])
+        return normalized
+
+    def _read(self, path):
+        try:
+            with open(path, "r") as policy_file:
+                raw = policy_file.read(MAX_POLICY_BYTES + 1)
+        except OSError as exc:
+            raise StorageError("Unable to read weekly policies") from exc
+        if len(raw) > MAX_POLICY_BYTES:
+            raise StorageError("Weekly policies exceed size limit")
+        try:
+            document = json.loads(raw)
+            if document.get("version") != 1:
+                raise StorageError("Unsupported weekly-policy schema")
+            return self._normalize(document.get("policies"))
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise StorageError("Weekly policies are not valid JSON") from exc
+
+    def load(self):
+        if self._exists(self.path):
+            try:
+                return self._read(self.path)
+            except StorageError:
+                log.error("Primary weekly policies are invalid; checking backup")
+        if self._exists(self.backup_path):
+            try:
+                policies = self._read(self.backup_path)
+                log.warn("Loaded previous weekly policies from backup")
+                return policies
+            except StorageError:
+                pass
+        if not self._exists(self.path) and not self._exists(self.backup_path):
+            return []
+        raise StorageError("No valid weekly policies are available")
+
+    def save(self, policies):
+        normalized = self._normalize(policies)
+        primary_exists = self._exists(self.path)
+        primary_valid = False
+        if primary_exists:
+            try:
+                current = self._read(self.path)
+                primary_valid = True
+                if current == normalized:
+                    return False
+            except StorageError:
+                pass
+        serialized = json.dumps({"version": 1, "policies": normalized})
+        if len(serialized.encode("utf-8")) > MAX_POLICY_BYTES:
+            raise StorageError("Weekly policies exceed size limit")
+
+        self._remove(self.temp_path)
+        try:
+            with open(self.temp_path, "w") as policy_file:
+                policy_file.write(serialized)
+                flush = getattr(policy_file, "flush", None)
+                if flush:
+                    flush()
+            sync = getattr(os, "sync", None)
+            if sync:
+                sync()
+            if primary_valid:
+                self._remove(self.backup_path)
+                os.rename(self.path, self.backup_path)
+            elif primary_exists:
+                if self._exists(self.backup_path):
+                    self._remove(self.path)
+                else:
+                    os.rename(self.path, self.backup_path)
+            try:
+                os.rename(self.temp_path, self.path)
+            except Exception:
+                if primary_valid and not self._exists(self.path):
+                    os.rename(self.backup_path, self.path)
+                raise
+        except StorageError:
+            raise
+        except Exception as exc:
+            raise StorageError("Unable to persist weekly policies") from exc
+        finally:
+            self._remove(self.temp_path)
+        return True
+
+
 class Scheduler:
     def __init__(self, access_manager, host_filter, clock, policies=None,
-                 timezone_offset_hours=0, tick_interval=5):
+                 timezone_offset_hours=0, tick_interval=5, policy_store=None):
         if tick_interval <= 0:
             raise ValueError("Scheduler tick interval must be positive")
         if type(timezone_offset_hours) is not int or not -12 <= timezone_offset_hours <= 14:
@@ -83,9 +220,12 @@ class Scheduler:
         self.clock = clock
         self.timezone_offset_hours = timezone_offset_hours
         self.tick_interval = tick_interval
+        self.policy_store = policy_store
         self._policies = {}
         self._last_weekly_state = {}
         self._recovery_complete = False
+        if policies is None and policy_store is not None:
+            policies = policy_store.load()
         self.set_policies(policies or [])
 
     def set_policies(self, policies):
@@ -101,6 +241,18 @@ class Scheduler:
 
     def list_policies(self):
         return [self._policies[ip].as_dict() for ip in sorted(self._policies)]
+
+    def replace_policies(self, policies):
+        candidates = []
+        for policy in policies:
+            candidates.append(
+                policy if isinstance(policy, WeeklyPolicy) else WeeklyPolicy(
+                    policy["ip"], policy["intervals"]
+                )
+            )
+        if self.policy_store is not None:
+            self.policy_store.save(candidates)
+        self.set_policies(candidates)
 
     def mark_recovery_complete(self):
         self._recovery_complete = True
