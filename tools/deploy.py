@@ -69,6 +69,16 @@ def ensure_remote_directory(prefix, remote_dir):
     run_command(prefix + ["fs", "ls", target], check=True, capture_output=True)
 
 
+def verify_remote_file(prefix, remote):
+    parent = remote.parent
+    target = ":" if str(parent) == "." else ":{}".format(parent)
+    result = run_command(
+        prefix + ["fs", "ls", target], check=True, capture_output=True
+    )
+    if remote.name not in result.stdout:
+        raise RuntimeError("Uploaded file is missing from remote listing: {}".format(remote))
+
+
 def deploy(port=None, project_root=PROJECT_ROOT, dry_run=False):
     files = collect_deploy_files(project_root)
     if not files:
@@ -88,7 +98,7 @@ def deploy(port=None, project_root=PROJECT_ROOT, dry_run=False):
     for local, remote in files:
         target = ":{}".format(remote)
         run_command(prefix + ["fs", "cp", str(local), target])
-        run_command(prefix + ["fs", "ls", target], capture_output=True)
+        verify_remote_file(prefix, remote)
     print("Deployment verified: {} files uploaded.".format(len(files)))
     return files
 

@@ -36,7 +36,8 @@ def test_deploy_commands_are_argument_lists(monkeypatch, tmp_path):
 
     def fake_run(command, **kwargs):
         calls.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 0, "", "")
+        stdout = "main.py" if command[-3:] == ["fs", "ls", ":"] else ""
+        return subprocess.CompletedProcess(command, 0, stdout, "")
 
     monkeypatch.setattr(deploy.subprocess, "run", fake_run)
     deploy.deploy("COM3 & echo unsafe", project_root=tmp_path)
