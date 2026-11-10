@@ -13,14 +13,16 @@ runs on the ESP32.
 | Area | Status | Evidence |
 |---|---|---|
 | Project and agent workflow | Complete | DR-000, DR-003 |
-| SOAP, Hosts and HostFilter modules | Transport-tested; router pending | DR-001, DR-002, DR-004 |
+| SOAP and Hosts modules | Transport-tested; authenticated discovery pending | DR-001, DR-004 |
+| HostFilter WAN control | Live block/unblock accepted | DR-002, DR-004 |
 | TR-064 transport on ESP32 | Import/async smoke-tested | DR-004 |
 | Timers and reboot recovery | Not started | Phase 3 |
 | HTTP API and dashboard | Not started | Phase 4 |
 
 Known limitations are tracked in `ROADMAP.md`. HTTPS is explicitly rejected
-until certificate validation and heap impact are designed. Live FRITZ!Box
-acceptance remains required before scheduling is implemented.
+until certificate validation and heap impact are designed. Authenticated Hosts
+discovery and integrated ESP32 Wi-Fi/router acceptance remain required before
+scheduling is implemented.
 
 ## Development setup
 
@@ -62,6 +64,11 @@ An explicit host-side block operation requires the target IP twice:
 `python tools/access_control.py --block 192.168.178.30 --confirm-block 192.168.178.30`.
 The tool reads `config.json`, checks the current state first, and sends the block
 only after successful authentication and capability verification.
+
+Allowing WAN access has the same safeguard:
+`python tools/access_control.py --allow 192.168.178.30 --confirm-allow 192.168.178.30`.
+Success requires both a cleared `NewDisallow` flag and effective
+`NewWANAccess=granted`; a denying filter profile is reported as failure.
 
 ## Configuration and secrets
 

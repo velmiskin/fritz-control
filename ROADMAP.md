@@ -11,8 +11,8 @@ Every milestone must end with code verification, test passing, and a completed *
 | **Phase 0** | Project Structure, Environment & Agent Rules | 🟢 Completed | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
 | **Phase 0.1** | Development Workflow & Evidence Hardening | 🟢 Completed | [DR-003](docs/decisions/DR-003-development-workflow-and-evidence.md) |
 | **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟡 Transport-Tested | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
-| **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟡 Transport-Tested | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
-| **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | 🟡 Live Block Verified | [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
+| **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟢 Hardware Accepted | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
+| **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | 🟢 Completed | [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 3** | Timers, Scheduling & State Persistence | ⚪ Not Started | - |
 | **Phase 4** | Web Server & Dashboard UI | ⚪ Not Started | - |
 | **Phase 5** | Security, Authentication & WireGuard Remote Access | ⚪ Not Started | - |
@@ -54,7 +54,7 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ---
 
-### Phase 2: WAN Access Control & Verification (`HostFilter:1`) 🟡
+### Phase 2: WAN Access Control & Verification (`HostFilter:1`) 🟢
 - [x] Implement `src/fritz/host_filter.py`.
 - [x] Implement `DisallowWANAccessByIP` (block WAN access for IPv4).
 - [x] Implement `GetWANAccessByIP` (query actual current WAN state).
@@ -62,9 +62,9 @@ Every milestone must end with code verification, test passing, and a completed *
 - [x] Add batch blocking/unblocking with rate limiting.
 - [x] Write unit tests `tests/test_host_filter.py`.
 - [x] Complete **[DR-002](docs/decisions/DR-002-wan-hostfilter-control.md)**.
-- [ ] Complete effective-WAN and hardware acceptance through Phase 2.5.
+- [x] Complete effective-WAN and hardware acceptance through Phase 2.5.
 
-### Phase 2.5: TR-064 Transport, Semantics & Hardware Acceptance 🟡
+### Phase 2.5: TR-064 Transport, Semantics & Hardware Acceptance 🟢
 - [x] Verify effective WAN state, not only the `NewDisallow` override flag.
 - [x] Treat missing, invalid and `WANAccess="error"` states as unknown/failure, never as allowed.
 - [x] Add byte-accurate HTTP framing, bounded response reads and explicit protocol errors.
@@ -76,7 +76,7 @@ Every milestone must end with code verification, test passing, and a completed *
 - [x] Record an isolated ESP32 import/async smoke test and post-GC heap observations.
 - [x] Verify the target model, FRITZ!OS version and required live SCPD actions with the project transport.
 - [x] Verify authenticated status and blocking on the explicitly selected test device `192.168.178.30`.
-- [ ] Verify unblocking only after explicit user authorization; do not undo the requested block automatically.
+- [x] Verify unblocking only after explicit user authorization; do not undo the requested block automatically.
 - [x] Harden `tools/deploy.py` and `tools/flash.py` argument handling and success reporting.
 - [x] Document the transport-tested implementation in **[DR-004](docs/decisions/DR-004-tr064-transport-hardening.md)**.
 

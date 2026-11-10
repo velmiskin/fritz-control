@@ -4,7 +4,7 @@
 **Status:** Accepted  
 **Author:** AI Agent & Engineering Team  
 **Related Milestone/Feature:** Phase 2.5 — TR-064 Transport, Semantics & Hardware Acceptance  
-**Evidence Level:** Transport tested; ESP32 smoke tested; live SCPD and block verified; unblock pending  
+**Evidence Level:** Transport tested; ESP32 smoke tested; live SCPD and block/unblock verified
 **Tested Versions:** Python 3.15.2; MicroPython 1.29.0 ESP32_GENERIC; FRITZ!Box 6690 Cable, FRITZ!OS 8.25
 
 ---
@@ -37,6 +37,8 @@ arguments.
   `NewWANAccess` value. Clearing the override while a filter profile still denies
   access returns `verified=false` with `filter_profile_denied`.
 - Fetch and parse live SCPD action lists before optional Hosts/HostFilter calls.
+- Require the target IPv4 address twice in the host-side block and allow CLI;
+  verify both the override flag and effective WAN state after every change.
 - Reject HTTPS configuration explicitly. MicroPython 1.29 supports a TLS context,
   but the project has not yet defined certificate trust, time prerequisites or
   measured TLS heap use on this board.
@@ -81,7 +83,7 @@ arguments.
   - `python tools/deploy.py --dry-run`
   - `python tools/hardware_smoke.py COM3`
   - `python tools/router_probe.py --host 192.168.178.1`
-- Host result: **51 tests passed** on Python 3.15.2.
+- Host result: **52 tests passed** on Python 3.15.2.
 - Wire-level tests use a real local asyncio TCP server for Digest retry, UTF-8
   Content-Length, chunked responses, HTTP 500 SOAP Faults, malformed/oversized
   responses and timeouts.
@@ -102,10 +104,14 @@ arguments.
   race; the retry loop now tolerates invalid intermediate states while remaining
   fail-closed. Independent and project-client reads then both confirmed
   `disallow=true`, `wan_access=denied`.
-- The device remains blocked as requested. Unblocking was not attempted.
-- Known gap: authenticated discovery and an explicitly selected safe-device
-  block/unblock test are required before Phase 2.5 and the Phase 1/2 hardware
-  gates are complete.
+- After separate explicit user authorization, the allow operation was sent for
+  the same address. Five immediate reads returned an incomplete transient state;
+  a subsequent authenticated read confirmed `disallow=false` and
+  `wan_access=granted`. The CLI verification window was therefore increased to
+  ten attempts while preserving fail-closed handling of invalid responses.
+- Phase 2 WAN control and the Phase 2.5 block/unblock acceptance gate are
+  complete. Authenticated Hosts discovery and integrated ESP32 Wi-Fi/router
+  acceptance remain open for the Phase 1 hardware gate.
 
 ## 6. Alternatives Considered & Trade-offs
 
@@ -120,10 +126,9 @@ arguments.
 
 ## 7. Next Steps
 
-Connect the ESP32 to the intended Wi-Fi. Verify unblocking on the selected test
-device only after explicit user authorization; do not undo the requested block
-as part of an automated test. Do not begin Phase 3 until that acceptance gate is
-complete.
+Connect the ESP32 to the intended Wi-Fi and run authenticated Hosts discovery
+without changing router state. Record that Phase 1 hardware evidence before
+beginning the Phase 3 scheduling and reboot-recovery milestone.
 
 ## 8. Traceability
 

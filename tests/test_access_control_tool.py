@@ -24,3 +24,14 @@ def test_access_control_rejects_invalid_ip_before_config_read(tmp_path):
         "--confirm-block", "192.168.178.999",
     ])
     assert result == 1
+
+
+def test_access_control_allow_requires_exact_confirmation(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text("{}", encoding="utf-8")
+    result = access_control.main([
+        "--config", str(config),
+        "--allow", "192.168.178.30",
+        "--confirm-allow", "192.168.178.31",
+    ])
+    assert result == 1

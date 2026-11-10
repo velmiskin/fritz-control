@@ -43,7 +43,7 @@ async def read_status(config_path, ip_address):
     return status
 
 
-async def block_and_verify(config_path, ip_address):
+async def set_and_verify(config_path, ip_address, disallow):
     client, service = await create_service(config_path)
 
     try:
@@ -62,7 +62,7 @@ async def block_and_verify(config_path, ip_address):
         ip_address, before["disallow"], before["wan_access"]
     ))
     result = await service.set_wan_access_and_verify(
-        ip_address, disallow=True, retries=5, delay_sec=1
+        ip_address, disallow=disallow, retries=10, delay_sec=1
     )
     print("After: ip={} disallow={} wan_access={} verified={} reason={}".format(
         ip_address, result["disallow"], result["wan_access"],
@@ -73,29 +73,51 @@ async def block_and_verify(config_path, ip_address):
     return before, result
 
 
+async def block_and_verify(config_path, ip_address):
+    return await set_and_verify(config_path, ip_address, disallow=True)
+
+
+async def allow_and_verify(config_path, ip_address):
+    return await set_and_verify(config_path, ip_address, disallow=False)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=PROJECT_ROOT / "config.json")
     operation = parser.add_mutually_exclusive_group(required=True)
     operation.add_argument("--status", help="read IPv4 WAN status without changes")
     operation.add_argument("--block", help="IPv4 address to block")
+    operation.add_argument("--allow", help="IPv4 address to allow")
     parser.add_argument(
         "--confirm-block",
         help="must exactly repeat --block to authorize the state change",
+    )
+    parser.add_argument(
+        "--confirm-allow",
+        help="must exactly repeat --allow to authorize the state change",
     )
     args = parser.parse_args(argv)
     try:
         if not args.config.is_file():
             raise ValueError("Configuration file does not exist")
         if args.status:
-            if args.confirm_block is not None:
-                raise ValueError("--confirm-block is only valid with --block")
+            if args.confirm_block is not None or args.confirm_allow is not None:
+                raise ValueError("confirmation flags are only valid with a state change")
             asyncio.run(read_status(args.config, validate_ipv4(args.status)))
-        else:
+        elif args.block:
+            if args.confirm_allow is not None:
+                raise ValueError("--confirm-allow is only valid with --allow")
             ip_address = validate_ipv4(args.block)
             if args.confirm_block != ip_address:
                 raise ValueError("--confirm-block must exactly match --block")
             asyncio.run(block_and_verify(args.config, ip_address))
+        else:
+            if args.confirm_block is not None:
+                raise ValueError("--confirm-block is only valid with --block")
+            ip_address = validate_ipv4(args.allow)
+            if args.confirm_allow != ip_address:
+                raise ValueError("--confirm-allow must exactly match --allow")
+            asyncio.run(allow_and_verify(args.config, ip_address))
     except (OSError, ValueError, TR064Error) as exc:
         print("Access operation failed: {}".format(exc))
         return 1
