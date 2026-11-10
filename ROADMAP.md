@@ -14,7 +14,7 @@ Every milestone must end with code verification, test passing, and a completed *
 | **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟢 Hardware Accepted | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | 🟢 Completed | [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 3** | Timers, Scheduling & State Persistence | 🟢 Completed | [DR-005](docs/decisions/DR-005-persistent-timer-state.md) |
-| **Phase 4** | Web Server & Dashboard UI | 🟡 In Progress (HTTP/Auth) | [DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md) |
+| **Phase 4** | Web Server & Dashboard UI | 🟢 Hardware Accepted | [DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md) |
 | **Phase 5** | Security, Authentication & WireGuard Remote Access | ⚪ Not Started | - |
 | **Phase 6** | Hardening, RAM Optimization & Watchdog | ⚪ Not Started | - |
 
@@ -94,15 +94,15 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ---
 
-### Phase 4: Web Server & Dashboard UI 🟡
+### Phase 4: Web Server & Dashboard UI 🟢
 - [x] Implement `src/net/http_server.py` (`uasyncio` bounded HTTP/1.1 server) — [DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md).
 - [x] Implement chunked static file serving from Flash (`www/`) — [DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md).
 - [x] Implement authenticated REST API in `src/api/routes.py` (devices, block/unblock, timers, schedules, status).
 - [x] Remove the runtime `admin` password default and refuse empty, placeholder or default credentials.
 - [x] Build a responsive single-page dashboard with device controls, timers and schedule editor in `www/`.
-- [ ] Test frontend memory impact on MicroPython heap.
+- [x] Test frontend/API memory impact on MicroPython heap with a full 33-device read-only probe.
 - [x] Include authentication and CSRF protection before exposing mutating API routes.
-- [ ] Complete **DR-006: Async HTTP Server, Auth & Frontend UI**.
+- [x] Complete **[DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md): Async HTTP Server, Auth & Frontend UI**.
 
 ---
 

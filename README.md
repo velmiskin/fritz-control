@@ -17,11 +17,16 @@ runs on the ESP32.
 | HostFilter WAN control | Live block/unblock accepted | DR-002, DR-004 |
 | TR-064 transport on ESP32 | Import/async smoke-tested | DR-004 |
 | Timers and reboot recovery | Phase 3 complete | DR-005 |
-| HTTP API and dashboard | Host-tested; ESP32 deployment pending | DR-006 |
+| HTTP API and dashboard | ESP32/LAN hardware accepted | DR-006 |
 
 Known limitations are tracked in `ROADMAP.md`. HTTPS is explicitly rejected
 until certificate validation and heap impact are designed. The firmware
-entrypoint is not integrated yet; scheduling and reboot recovery are next.
+dashboard is intended for LAN/WireGuard access only; public exposure is not
+supported.
+
+With the deployed ESP32 on the current network, open `http://192.168.178.53/`.
+The DHCP address may change after a router lease change; reserve it in FRITZ!Box
+before relying on the URL.
 
 ## Development setup
 
