@@ -193,6 +193,17 @@ class NTPClient:
         self.poll_interval = poll_interval
         self.socket = socket_module or socket
         self.random_bytes = random_bytes or os.urandom
+        self._sync_unix = None
+        self._sync_monotonic_ms = None
+
+    def is_synchronized(self):
+        return self._sync_unix is not None
+
+    def now(self):
+        if not self.is_synchronized():
+            raise NTPError("Clock has not been synchronized")
+        elapsed = _elapsed_ms(self._sync_monotonic_ms) // 1000
+        return self._sync_unix + elapsed
 
     async def _exchange(self, payload, address, max_size):
         last_error = None
@@ -282,5 +293,7 @@ class NTPClient:
                 raise NTPError("RTC is unavailable") from exc
             rtc = machine.RTC()
         rtc.datetime(unix_to_rtc_datetime(result["unix_time"]))
+        self._sync_unix = result["unix_time"]
+        self._sync_monotonic_ms = _monotonic_ms()
         log.info("NTP synchronization completed")
         return result

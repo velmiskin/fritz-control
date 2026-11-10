@@ -40,6 +40,13 @@ interpreted as an empty, safe-to-unblock state.
   the echoed originate token before accepting the transmit timestamp.
 - Keep the RTC in UTC. Convert NTP time independently of the port-specific
   MicroPython epoch and support the NTP era rollover after 2036.
+- Require trusted synchronized time and readable timer storage before changing
+  router state. Persist a timer only after the router verifies the blocked state.
+- When persistence fails after a verified block, leave the device blocked and
+  surface an explicit reconciliation error; never compensate by unblocking.
+- For unblocking, verify effective WAN access first and remove the timer second.
+  A cleanup failure leaves a stale blocked record, which is safer than losing a
+  still-blocked timer.
 
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 
@@ -61,6 +68,8 @@ interpreted as an empty, safe-to-unblock state.
   an error so recovery can remain fail-closed and leave router state unchanged.
 - DNS/NTP packets must match their random query/token, source endpoint and
   protocol invariants. RTC is updated only after the complete response validates.
+- Timed access rejects unsynchronized clocks, corrupt storage, invalid durations,
+  unverified router changes and durations outside 60 seconds through 7 days.
 
 ## 5. Verification & Testing Results
 
@@ -70,9 +79,13 @@ interpreted as an empty, safe-to-unblock state.
   normalization, previous-version backup, corrupt-primary fallback, rejection
   of corrupt/unsafe data, and restoration after a simulated atomic-replace
   failure.
-- Full host result: **71 tests passed** on Python 3.15.2.
+- Full host result after the access-manager milestone: **81 tests passed** on
+  Python 3.15.2.
 - NTP tests cover DNS A parsing, hostname resolution, matching request tokens,
   bounded retry/timeout behavior, UTC RTC conversion and leap-day handling.
+- Access-manager tests cover block-before-persist ordering, trusted-time and
+  storage gates, router failures, persistence failures, verified unblocking and
+  duration bounds.
 - `python tools/hardware_ntp.py COM3 --config config.json` connected the target
   ESP32 to Wi-Fi, resolved the configured NTP hostname through the interface DNS
   server, accepted a stratum-2 response, and set the RTC to 2026 UTC. Observed
@@ -95,13 +108,14 @@ interpreted as an empty, safe-to-unblock state.
 
 ## 7. Next Steps
 
-Implement an access manager that writes a blocked timer only after router-side
-blocking has been verified. Recovery must reconcile the stored state, trusted
-time, and actual router WAN state before unblocking.
+Implement the scheduler and recovery gate. Recovery must reconcile the stored
+state, trusted time, and actual router WAN state before unblocking.
 
 ## 8. Traceability
 
-- Roadmap: Phase 3, `src/core/storage.py`, `src/net/ntp.py`.
-- Tests: `tests/test_storage.py`, `tests/test_ntp.py`.
+- Roadmap: Phase 3, `src/core/storage.py`, `src/net/ntp.py`,
+  `src/services/access_manager.py`.
+- Tests: `tests/test_storage.py`, `tests/test_ntp.py`,
+  `tests/test_access_manager.py`.
 - NTP hardware runner: `tools/hardware_ntp.py`; device script:
   `tests/hardware/phase3_ntp.py`.

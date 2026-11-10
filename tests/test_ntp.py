@@ -157,6 +157,8 @@ def test_synchronize_sets_utc_rtc_only_after_valid_response():
         result = await client.synchronize(rtc)
         assert result["unix_time"] == timestamp
         assert rtc.value == (2027, 1, 1, 4, 0, 0, 0, 0)
+        assert client.is_synchronized() is True
+        assert timestamp <= client.now() <= timestamp + 1
 
     asyncio.run(run())
 
@@ -166,3 +168,8 @@ def test_unix_to_rtc_datetime_handles_leap_day():
         2024, 2, 29, 12, 34, 56, tzinfo=datetime.timezone.utc
     ).timestamp())
     assert unix_to_rtc_datetime(timestamp) == (2024, 2, 29, 3, 12, 34, 56, 0)
+
+
+def test_now_rejects_unsynchronized_clock():
+    with pytest.raises(NTPError, match="not been synchronized"):
+        NTPClient("192.0.2.123").now()
