@@ -87,8 +87,8 @@ Every milestone must end with code verification, test passing, and a completed *
 - [x] Implement `src/net/ntp.py` (async DNS/NTP client for trusted UTC synchronization) — [DR-005](docs/decisions/DR-005-persistent-timer-state.md).
 - [x] Implement `src/services/access_manager.py` (15m, 30m, 1h, 2h, custom durations) — [DR-005](docs/decisions/DR-005-persistent-timer-state.md).
 - [x] Implement `src/services/scheduler.py` (recovery-gated timers and day-of-week blocking intervals) — [DR-005](docs/decisions/DR-005-persistent-timer-state.md).
-- [ ] Implement `src/services/recovery.py` (fail-safe reboot recovery without inadvertent unblocking).
-- [ ] Write unit tests `tests/test_scheduler.py` and `tests/test_recovery.py`.
+- [x] Implement `src/services/recovery.py` (two-phase fail-safe reboot reconciliation) — [DR-005](docs/decisions/DR-005-persistent-timer-state.md).
+- [x] Write unit tests `tests/test_scheduler.py` and `tests/test_recovery.py`.
 - [ ] Extend **[DR-005](docs/decisions/DR-005-persistent-timer-state.md)** through access scheduling and reboot recovery acceptance.
 
 ---

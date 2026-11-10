@@ -53,6 +53,10 @@ interpreted as an empty, safe-to-unblock state.
 - Give active timers priority over weekly allow periods. When a timer expires
   during a weekly block, delete only its record and keep WAN blocked, avoiding a
   transient unblock.
+- Recover in two phases. First synchronize time and read a valid WAN snapshot for
+  every timer and weekly-policy device without changing router state. Then
+  restore missing blocks, clear stale records, and perform expired unblocks last.
+  Open the scheduler gate only after every recovery action succeeds.
 
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 
@@ -89,6 +93,8 @@ interpreted as an empty, safe-to-unblock state.
   Python 3.15.2.
 - Full host result after the scheduler milestone: **90 tests passed** on Python
   3.15.2.
+- Full host result after the recovery milestone: **96 tests passed** on Python
+  3.15.2.
 - NTP tests cover DNS A parsing, hostname resolution, matching request tokens,
   bounded retry/timeout behavior, UTC RTC conversion and leap-day handling.
 - Access-manager tests cover block-before-persist ordering, trusted-time and
@@ -97,6 +103,9 @@ interpreted as an empty, safe-to-unblock state.
 - Scheduler tests cover weekday/timezone calculation, interval validation, the
   closed recovery gate, due timers, timer/policy precedence, suppression of
   redundant router calls and retry after unverified changes.
+- Recovery tests prove that all reads precede actions, safe-direction blocks
+  precede unblocks, stale/profile-denied timers require no WAN change, and time,
+  read or verification failures keep the scheduler gate closed.
 - `python tools/hardware_ntp.py COM3 --config config.json` connected the target
   ESP32 to Wi-Fi, resolved the configured NTP hostname through the interface DNS
   server, accepted a stratum-2 response, and set the RTC to 2026 UTC. Observed
@@ -119,14 +128,16 @@ interpreted as an empty, safe-to-unblock state.
 
 ## 7. Next Steps
 
-Implement recovery. It must synchronize time and reconcile every stored timer
-with actual router WAN state before opening the scheduler gate.
+Persist weekly policies, then integrate Phase 3 services into the application
+entrypoint before exposing them through the authenticated web API.
 
 ## 8. Traceability
 
 - Roadmap: Phase 3, `src/core/storage.py`, `src/net/ntp.py`,
-  `src/services/access_manager.py`, `src/services/scheduler.py`.
+  `src/services/access_manager.py`, `src/services/scheduler.py`,
+  `src/services/recovery.py`.
 - Tests: `tests/test_storage.py`, `tests/test_ntp.py`,
-  `tests/test_access_manager.py`, `tests/test_scheduler.py`.
+  `tests/test_access_manager.py`, `tests/test_scheduler.py`,
+  `tests/test_recovery.py`.
 - NTP hardware runner: `tools/hardware_ntp.py`; device script:
   `tests/hardware/phase3_ntp.py`.
