@@ -15,6 +15,8 @@ try:
 except ImportError:
     import os
 
+import gc
+
 from core.logger import log
 
 
@@ -229,6 +231,7 @@ class AsyncHTTPServer:
                 await writer.wait_closed()
             except Exception:
                 pass
+            gc.collect()
 
     async def start(self):
         self.server = await asyncio.start_server(

@@ -13,9 +13,9 @@ from net.http_server import FileResponse, HTTPError, Request
 
 
 class FakeHosts:
-    async def get_hosts_page(self, offset=0, limit=8):
+    async def get_hosts_page(self, offset=0, limit=4):
         assert offset == 0
-        assert limit == 8
+        assert limit == 4
         return {"devices": [{
             "ip": "192.168.178.30", "hostname": "tablet"
         }], "total": 1, "offset": 0}
@@ -96,7 +96,7 @@ def test_static_login_status_and_devices(tmp_path):
     assert status["recovery_ok"] is True
     assert status["csrf"]
     devices = json.loads(asyncio.run(router(request(
-        "GET", "/api/devices?offset=0&limit=8", headers=headers
+        "GET", "/api/devices?offset=0&limit=4", headers=headers
     ))).body)
     assert devices["devices"][0]["hostname"] == "tablet"
 

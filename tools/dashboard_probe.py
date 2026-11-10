@@ -15,9 +15,12 @@ def _request(connection, method, path, body=None, headers=None):
     if payload is not None:
         request_headers["Content-Type"] = "application/json"
         request_headers["Content-Length"] = str(len(payload))
-    connection.request(method, path, body=payload, headers=request_headers)
-    response = connection.getresponse()
-    data = response.read()
+    try:
+        connection.request(method, path, body=payload, headers=request_headers)
+        response = connection.getresponse()
+        data = response.read()
+    except (OSError, http.client.HTTPException) as exc:
+        raise RuntimeError("Dashboard connection failed for {}".format(path)) from exc
     if response.status < 200 or response.status >= 300:
         raise RuntimeError("Dashboard returned HTTP {} for {}".format(
             response.status, path
@@ -59,7 +62,7 @@ def probe_dashboard(host, port, config_path, connection_factory=None):
         while offset < total:
             _, devices_body = _request(
                 connection, "GET",
-                "/api/devices?offset={}&limit=8".format(offset),
+                "/api/devices?offset={}&limit=4".format(offset),
                 headers=headers,
             )
             page = json.loads(devices_body.decode("utf-8"))
