@@ -1,11 +1,11 @@
-# Decision Report: [DR-005] Persistent Timer State Foundation
+# Decision Report: [DR-005] Persistent State & Trusted Time Foundations
 
 **Date:** 2026-11-10
 **Status:** Accepted
 **Author:** AI Agent & Engineering Team
-**Related Milestone/Feature:** Phase 3 — persistent active timer state
-**Evidence Level:** Unit tested; hardware persistence acceptance pending
-**Tested Versions:** Python 3.15.2; MicroPython API compatibility designed for 1.29.0
+**Related Milestone/Feature:** Phase 3 — persistent active timer state and trusted UTC
+**Evidence Level:** Unit tested; live ESP32 DNS/NTP accepted; hardware persistence acceptance pending
+**Tested Versions:** Python 3.15.2; MicroPython 1.29.0 ESP32_GENERIC
 
 ---
 
@@ -33,6 +33,13 @@ interpreted as an empty, safe-to-unblock state.
   empty state.
 - Keep storage passive. It records facts but performs no router operation;
   recovery will later reconcile time and actual WAN state before any action.
+- Resolve configured NTP hostnames through a bounded asynchronous DNS A query;
+  no blocking `getaddrinfo()` or `ntptime` call is used.
+- Exchange NTPv4 packets over a non-blocking UDP socket with explicit timeout,
+  retry count and cooperative polling. Validate leap status, mode, stratum and
+  the echoed originate token before accepting the transmit timestamp.
+- Keep the RTC in UTC. Convert NTP time independently of the port-specific
+  MicroPython epoch and support the NTP era rollover after 2036.
 
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 
@@ -41,9 +48,9 @@ interpreted as an empty, safe-to-unblock state.
   library is used.
 - Unchanged state produces no Flash write. A changed state writes one temporary
   file and uses rename operations for recovery boundaries.
-- No network I/O or event-loop blocking is introduced by this storage-only step.
-  Writes are synchronous and must later be kept outside latency-sensitive HTTP
-  request handling.
+- Storage writes are synchronous and must later be kept outside latency-sensitive
+  HTTP request handling. DNS and NTP sockets are non-blocking and yield to
+  `uasyncio` between attempts.
 
 ## 4. Security & Fault Tolerance
 
@@ -52,6 +59,8 @@ interpreted as an empty, safe-to-unblock state.
   times and non-blocked state are rejected.
 - Missing storage means no known active timers. Corrupt existing storage raises
   an error so recovery can remain fail-closed and leave router state unchanged.
+- DNS/NTP packets must match their random query/token, source endpoint and
+  protocol invariants. RTC is updated only after the complete response validates.
 
 ## 5. Verification & Testing Results
 
@@ -61,8 +70,15 @@ interpreted as an empty, safe-to-unblock state.
   normalization, previous-version backup, corrupt-primary fallback, rejection
   of corrupt/unsafe data, and restoration after a simulated atomic-replace
   failure.
-- Full host result: **64 tests passed** on Python 3.15.2.
-- Hardware Flash/power-cut verification has not yet been performed.
+- Full host result: **71 tests passed** on Python 3.15.2.
+- NTP tests cover DNS A parsing, hostname resolution, matching request tokens,
+  bounded retry/timeout behavior, UTC RTC conversion and leap-day handling.
+- `python tools/hardware_ntp.py COM3 --config config.json` connected the target
+  ESP32 to Wi-Fi, resolved the configured NTP hostname through the interface DNS
+  server, accepted a stratum-2 response, and set the RTC to 2026 UTC. Observed
+  free heap after `gc.collect()` was 97,360 bytes before connection and 96,832
+  bytes after synchronization. The staging directory and temporary config were
+  removed. Hardware Flash/power-cut verification remains pending.
 
 ## 6. Alternatives Considered & Trade-offs
 
@@ -72,14 +88,20 @@ interpreted as an empty, safe-to-unblock state.
   required for safe recovery.
 - Persisting an `allowed` state was rejected because reboot recovery must never
   infer permission to unblock from stale storage.
+- MicroPython's blocking `ntptime` helper was rejected because a stalled DNS or
+  UDP request must not freeze the future web UI and watchdog tasks.
+- Applying the configured timezone offset to RTC was rejected; UTC avoids DST
+  ambiguity and local conversion belongs at the API/UI boundary.
 
 ## 7. Next Steps
 
-Implement NTP synchronization and an access manager that writes a blocked timer
-only after router-side blocking has been verified. Recovery must reconcile the
-stored state, trusted time, and actual router WAN state before unblocking.
+Implement an access manager that writes a blocked timer only after router-side
+blocking has been verified. Recovery must reconcile the stored state, trusted
+time, and actual router WAN state before unblocking.
 
 ## 8. Traceability
 
-- Roadmap: Phase 3, `src/core/storage.py`.
-- Tests: `tests/test_storage.py`.
+- Roadmap: Phase 3, `src/core/storage.py`, `src/net/ntp.py`.
+- Tests: `tests/test_storage.py`, `tests/test_ntp.py`.
+- NTP hardware runner: `tools/hardware_ntp.py`; device script:
+  `tests/hardware/phase3_ntp.py`.

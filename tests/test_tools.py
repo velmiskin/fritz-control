@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from tools import deploy, flash, hardware_discovery, hardware_smoke
+from tools import deploy, flash, hardware_discovery, hardware_ntp, hardware_smoke
 
 
 def test_deploy_manifest_includes_source_and_static_files(tmp_path):
@@ -131,3 +131,35 @@ def test_hardware_discovery_rejects_placeholder_config(tmp_path):
         assert "non-placeholder wifi.ssid" in str(exc)
     else:
         raise AssertionError("placeholder configuration was accepted")
+
+
+def test_hardware_ntp_stages_config_and_always_cleans(monkeypatch, tmp_path):
+    for local_name, _ in hardware_ntp.FILES:
+        path = tmp_path / local_name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("", encoding="utf-8")
+    script = tmp_path / "tests" / "hardware" / "phase3_ntp.py"
+    script.parent.mkdir(parents=True)
+    script.write_text("", encoding="utf-8")
+    config = tmp_path / "config.json"
+    config.write_text(
+        '{"wifi":{"ssid":"test","password":"secret"},'
+        '"ntp":{"server":"pool.example"}}',
+        encoding="utf-8",
+    )
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append((command, kwargs))
+        returncode = 1 if len(calls) == 1 else 0
+        stdout = "phase3_ntp PASS\n" if "run" in command else ""
+        return subprocess.CompletedProcess(command, returncode, stdout, "")
+
+    monkeypatch.setattr(hardware_ntp.subprocess, "run", fake_run)
+    output = hardware_ntp.run_hardware_ntp("COM3", config, project_root=tmp_path)
+    assert "PASS" in output
+    assert any(command[-1] == ":phase3_ntp/config.json"
+               for command, _ in calls)
+    assert calls[-1][0][-4:] == ["fs", "rm", "-r", ":phase3_ntp"]
+    assert all(isinstance(command, list) for command, _ in calls)
+    assert all("shell" not in kwargs for _, kwargs in calls)

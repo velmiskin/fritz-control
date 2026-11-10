@@ -13,7 +13,7 @@ Every milestone must end with code verification, test passing, and a completed *
 | **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟢 Hardware Accepted | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟢 Hardware Accepted | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | 🟢 Completed | [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
-| **Phase 3** | Timers, Scheduling & State Persistence | 🟡 In Progress (Storage) | [DR-005](docs/decisions/DR-005-persistent-timer-state.md) |
+| **Phase 3** | Timers, Scheduling & State Persistence | 🟡 In Progress (Storage/NTP) | [DR-005](docs/decisions/DR-005-persistent-timer-state.md) |
 | **Phase 4** | Web Server & Dashboard UI | ⚪ Not Started | - |
 | **Phase 5** | Security, Authentication & WireGuard Remote Access | ⚪ Not Started | - |
 | **Phase 6** | Hardening, RAM Optimization & Watchdog | ⚪ Not Started | - |
@@ -84,7 +84,7 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ### Phase 3: Timers, Scheduling & State Persistence 🟡
 - [x] Implement `src/core/storage.py` (Flash NV-storage for active timer state) — [DR-005](docs/decisions/DR-005-persistent-timer-state.md).
-- [ ] Implement `src/net/ntp.py` (NTP client for accurate time synchronization).
+- [x] Implement `src/net/ntp.py` (async DNS/NTP client for trusted UTC synchronization) — [DR-005](docs/decisions/DR-005-persistent-timer-state.md).
 - [ ] Implement `src/services/access_manager.py` (15m, 30m, 1h, 2h, custom durations).
 - [ ] Implement `src/services/scheduler.py` (day-of-week interval schedules).
 - [ ] Implement `src/services/recovery.py` (fail-safe reboot recovery without inadvertent unblocking).
