@@ -17,7 +17,7 @@ runs on the ESP32.
 | HostFilter WAN control | Live block/unblock accepted | DR-002, DR-004 |
 | TR-064 transport on ESP32 | Import/async smoke-tested | DR-004 |
 | Timers and reboot recovery | Phase 3 complete | DR-005 |
-| HTTP API and dashboard | Not started | Phase 4 |
+| HTTP API and dashboard | Host-tested; ESP32 deployment pending | DR-006 |
 
 Known limitations are tracked in `ROADMAP.md`. HTTPS is explicitly rejected
 until certificate validation and heap impact are designed. The firmware

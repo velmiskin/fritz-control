@@ -97,15 +97,11 @@ Every milestone must end with code verification, test passing, and a completed *
 ### Phase 4: Web Server & Dashboard UI 🟡
 - [x] Implement `src/net/http_server.py` (`uasyncio` bounded HTTP/1.1 server) — [DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md).
 - [x] Implement chunked static file serving from Flash (`www/`) — [DR-006](docs/decisions/DR-006-async-http-auth-dashboard.md).
-- [ ] Implement REST API in `src/api/routes.py` (`/api/devices`, `/api/block`, `/api/unblock`, `/api/timer`).
+- [x] Implement authenticated REST API in `src/api/routes.py` (devices, block/unblock, timers, schedules, status).
 - [x] Remove the runtime `admin` password default and refuse empty, placeholder or default credentials.
-- [ ] Build responsive mobile-friendly UI:
-  - `www/index.html` (Dashboard).
-  - `www/devices.html` (Device table with toggles).
-  - `www/schedules.html` (Schedule editor).
-  - `www/settings.html` (System config).
+- [x] Build a responsive single-page dashboard with device controls, timers and schedule editor in `www/`.
 - [ ] Test frontend memory impact on MicroPython heap.
-- [ ] Include authentication and CSRF protection before exposing mutating API routes.
+- [x] Include authentication and CSRF protection before exposing mutating API routes.
 - [ ] Complete **DR-006: Async HTTP Server, Auth & Frontend UI**.
 
 ---

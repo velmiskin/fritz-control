@@ -1,7 +1,7 @@
 # Decision Report: [DR-006] Async HTTP, Authentication & Dashboard
 
 **Date:** 2026-11-10
-**Status:** Accepted (HTTP/auth foundation; API/dashboard acceptance pending)
+**Status:** Accepted (host tested; ESP32 dashboard acceptance pending)
 **Author:** AI Agent & Engineering Team
 **Related Milestone/Feature:** Phase 4 — Web Server & Dashboard UI
 **Evidence Level:** Unit tested
@@ -51,6 +51,15 @@ pending in the next Phase 4 step.
 
 Full host result after this milestone: **108 tests passed** on Python 3.15.2.
 
+The API/dashboard milestone adds authenticated device discovery, timed block,
+verified unblock, timer status and persistent schedule routes. All mutations
+require the session cookie plus CSRF token. Static routes are exact allowlisted
+paths, preventing traversal. The responsive single-page UI provides login,
+device controls, timers and a weekly blocking editor without a framework.
+
+Full host result after API and entrypoint integration: **111 tests passed** on
+Python 3.15.2.
+
 ## 6. Alternatives Considered & Trade-offs
 
 A third-party MicroPython web framework was rejected to keep heap use and parser
@@ -60,11 +69,14 @@ offers no independent CSRF token or logout semantics.
 
 ## 7. Next Steps
 
-Add authenticated REST routes, the streamed dashboard assets and application
-entrypoint integration, then deploy to ESP32 for LAN acceptance.
+Deploy the integrated entrypoint, configuration and dashboard to ESP32, measure
+heap after startup, and perform LAN login/read-only acceptance before the user
+tests mutating controls.
 
 ## 8. Traceability
 
 - Roadmap: Phase 4.
-- Modules: `src/net/http_server.py`, `src/api/auth.py`.
-- Tests: `tests/test_http_server.py`, `tests/test_auth.py`.
+- Modules: `src/net/http_server.py`, `src/api/auth.py`, `src/api/routes.py`,
+  `src/main.py`, `www/`.
+- Tests: `tests/test_http_server.py`, `tests/test_auth.py`,
+  `tests/test_routes.py`.

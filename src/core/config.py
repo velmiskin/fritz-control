@@ -21,7 +21,7 @@ DEFAULT_CONFIG = {
     },
     "web": {
         "port": 80,
-        "admin_password": "admin"
+        "admin_password": ""
     },
     "ntp": {
         "server": "pool.ntp.org",
@@ -95,3 +95,11 @@ class Config:
     @property
     def fritz_use_ssl(self):
         return self.get("fritzbox", "use_ssl", False)
+
+    @property
+    def web_port(self):
+        return self.get("web", "port", 80)
+
+    @property
+    def web_password(self):
+        return self.get("web", "admin_password", "")
