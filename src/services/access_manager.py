@@ -118,3 +118,13 @@ class AccessManager:
             return self.store.load()["timers"]
         except StorageError as exc:
             raise AccessManagerError("Timer storage is unavailable") from exc
+
+    def clear_timer_record(self, ip_address):
+        """Remove a timer without changing WAN state (scheduler reconciliation)."""
+        ip_address = validate_ipv4(ip_address)
+        self._trusted_now()
+        try:
+            state = self.store.load()
+            self.store.save(self._remove_timer(state, ip_address))
+        except StorageError as exc:
+            raise AccessManagerError("Timer record cleanup failed") from exc
