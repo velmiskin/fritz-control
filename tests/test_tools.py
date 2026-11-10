@@ -5,13 +5,17 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from tools import deploy, flash, hardware_discovery, hardware_ntp, hardware_smoke
+from tools import (
+    dashboard_probe, deploy, flash, hardware_discovery, hardware_ntp,
+    hardware_smoke,
+)
 
 
 def test_deploy_manifest_includes_source_and_static_files(tmp_path):
     (tmp_path / "src" / "core").mkdir(parents=True)
     (tmp_path / "www").mkdir()
     (tmp_path / "src" / "boot.py").write_text("", encoding="utf-8")
+    (tmp_path / "src" / "main.py").write_text("", encoding="utf-8")
     (tmp_path / "src" / "core" / "config.py").write_text("", encoding="utf-8")
     (tmp_path / "www" / "index.html").write_text("", encoding="utf-8")
     (tmp_path / "www" / "css").mkdir()
@@ -19,9 +23,10 @@ def test_deploy_manifest_includes_source_and_static_files(tmp_path):
     manifest = deploy.collect_deploy_files(tmp_path)
     remotes = {str(remote) for _, remote in manifest}
     assert remotes == {
-        "boot.py", "core/config.py", "www/index.html", "www/css/style.css"
+        "boot.py", "main.py", "core/config.py", "www/index.html", "www/css/style.css"
     }
     assert deploy.collect_remote_directories(manifest) == ["core", "www", "www/css"]
+    assert str(manifest[-1][1]) == "main.py"
 
 
 def test_deploy_commands_are_argument_lists(monkeypatch, tmp_path):
@@ -163,3 +168,52 @@ def test_hardware_ntp_stages_config_and_always_cleans(monkeypatch, tmp_path):
     assert calls[-1][0][-4:] == ["fs", "rm", "-r", ":phase3_ntp"]
     assert all(isinstance(command, list) for command, _ in calls)
     assert all("shell" not in kwargs for _, kwargs in calls)
+
+
+def test_dashboard_probe_is_read_only_and_uses_config_password(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text(
+        '{"web":{"admin_password":"a-unique-password"}}', encoding="utf-8"
+    )
+
+    class Response:
+        status = 200
+
+        def __init__(self, body, cookie=""):
+            self.body = body
+            self.cookie = cookie
+
+        def read(self):
+            return self.body
+
+        def getheader(self, name, default=""):
+            return self.cookie if name == "Set-Cookie" else default
+
+    class Connection:
+        def __init__(self, host, port, timeout):
+            self.requests = []
+
+        def request(self, method, path, body=None, headers=None):
+            self.requests.append((method, path, body, headers))
+            self.path = path
+
+        def getresponse(self):
+            bodies = {
+                "/": b"FritzControl",
+                "/api/login": b'{"csrf":"token"}',
+                "/api/status": b'{"recovery_ok":true,"clock_synchronized":true}',
+                "/api/timers": b'{"timers":[]}',
+                "/api/schedules": b'{"policies":[]}',
+                "/api/devices": b'{"devices":[]}',
+            }
+            cookie = "fc_session=session; Path=/" if self.path == "/api/login" else ""
+            return Response(bodies[self.path], cookie)
+
+        def close(self):
+            pass
+
+    status, devices = dashboard_probe.probe_dashboard(
+        "192.0.2.10", 80, config, connection_factory=Connection
+    )
+    assert status["recovery_ok"] is True
+    assert devices == []

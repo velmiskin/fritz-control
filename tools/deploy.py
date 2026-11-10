@@ -19,10 +19,6 @@ def mpremote_prefix(port=None):
 def collect_deploy_files(project_root=PROJECT_ROOT):
     files = []
     src_root = project_root / "src"
-    for name in ("boot.py", "main.py"):
-        path = src_root / name
-        if path.is_file():
-            files.append((path, PurePosixPath(name)))
     for directory in SOURCE_DIRS:
         source_dir = src_root / directory
         if source_dir.is_dir():
@@ -34,6 +30,12 @@ def collect_deploy_files(project_root=PROJECT_ROOT):
         for path in sorted(item for item in www_root.rglob("*") if item.is_file()):
             relative = path.relative_to(project_root)
             files.append((path, PurePosixPath(relative.as_posix())))
+    # Entrypoints are uploaded last so an automatic reset cannot start a new
+    # application against a partially updated module set or dashboard.
+    for name in ("boot.py", "main.py"):
+        path = src_root / name
+        if path.is_file():
+            files.append((path, PurePosixPath(name)))
     return files
 
 
