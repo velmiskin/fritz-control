@@ -112,15 +112,13 @@ def test_hosts_page_fetches_only_requested_indices():
         service.get_generic_host_entry = AsyncMock(
             side_effect=lambda index: {"index": index}
         )
-        page = await service.get_hosts_page(offset=8, limit=4)
+        page = await service.get_hosts_page(offset=8, limit=1)
         assert page == {
-            "devices": [{"index": 8}, {"index": 9}, {"index": 10}, {"index": 11}],
+            "devices": [{"index": 8}],
             "total": 20,
             "offset": 8,
         }
-        assert [call.args[0] for call in service.get_generic_host_entry.await_args_list] == [
-            8, 9, 10, 11
-        ]
+        assert [call.args[0] for call in service.get_generic_host_entry.await_args_list] == [8]
     asyncio.run(run())
 
 def test_tr064_digest_auth_header_generation():

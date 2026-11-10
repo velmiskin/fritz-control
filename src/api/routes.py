@@ -49,7 +49,7 @@ class APIRouter:
                 parameters[key] = value
         try:
             offset = int(parameters.get("offset", "0"))
-            limit = int(parameters.get("limit", "4"))
+            limit = int(parameters.get("limit", "1"))
         except ValueError as exc:
             raise HTTPError(400, "Invalid device page") from exc
         return Response.json(await self.hosts.get_hosts_page(offset, limit))

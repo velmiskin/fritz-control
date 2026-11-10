@@ -223,6 +223,7 @@ class AsyncHTTPServer:
                 else:
                     log.error("HTTP request failed: {}".format(error_name))
                     response = Response.json({"error": "internal_server_error"}, 500)
+            gc.collect()
             try:
                 await self.write_response(writer, response)
             except Exception as exc:

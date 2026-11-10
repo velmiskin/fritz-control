@@ -62,7 +62,7 @@ def probe_dashboard(host, port, config_path, connection_factory=None):
         while offset < total:
             _, devices_body = _request(
                 connection, "GET",
-                "/api/devices?offset={}&limit=4".format(offset),
+                "/api/devices?offset={}&limit=1".format(offset),
                 headers=headers,
             )
             page = json.loads(devices_body.decode("utf-8"))
