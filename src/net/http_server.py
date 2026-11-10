@@ -15,6 +15,8 @@ try:
 except ImportError:
     import os
 
+from core.logger import log
+
 
 MAX_REQUEST_LINE = 1024
 MAX_HEADER_LINE = 1024
@@ -199,8 +201,8 @@ class AsyncHTTPServer:
         await self._write_headers(
             writer, response.status, response.headers, len(response.body)
         )
-        if response.body:
-            writer.write(response.body)
+        for offset in range(0, len(response.body), FILE_CHUNK_SIZE):
+            writer.write(response.body[offset:offset + FILE_CHUNK_SIZE])
             await self._wait(writer.drain())
 
     async def handle_connection(self, reader, writer):
@@ -214,9 +216,13 @@ class AsyncHTTPServer:
                 response = Response.json({"error": exc.message}, exc.status)
             except TimeoutError:
                 response = Response.json({"error": "request_timeout"}, 408)
-            except Exception:
+            except Exception as exc:
+                log.error("HTTP request failed: {}".format(type(exc).__name__))
                 response = Response.json({"error": "internal_server_error"}, 500)
-            await self.write_response(writer, response)
+            try:
+                await self.write_response(writer, response)
+            except Exception as exc:
+                log.error("HTTP response failed: {}".format(type(exc).__name__))
         finally:
             writer.close()
             try:

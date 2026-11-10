@@ -72,7 +72,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         probe_dashboard(args.host, args.port, args.config)
-    except (OSError, ValueError, KeyError, RuntimeError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, KeyError, RuntimeError, json.JSONDecodeError,
+            http.client.HTTPException) as exc:
         print("Dashboard probe failed: {}".format(exc))
         return 1
     return 0

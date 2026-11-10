@@ -34,8 +34,10 @@ class FakeReader:
 class FakeWriter:
     def __init__(self):
         self.data = bytearray()
+        self.writes = []
 
     def write(self, data):
+        self.writes.append(bytes(data))
         self.data.extend(data)
 
     async def drain(self):
@@ -80,3 +82,13 @@ def test_response_has_security_and_length_headers():
     assert output.startswith(b"HTTP/1.1 200 OK\r\n")
     assert b"X-Content-Type-Options: nosniff\r\n" in output
     assert b"Content-Length:" in output
+
+
+def test_large_dynamic_response_is_streamed_in_bounded_chunks():
+    writer = FakeWriter()
+    asyncio.run(AsyncHTTPServer(unused_handler).write_response(
+        writer, Response(200, b"x" * 3000)
+    ))
+    body_writes = writer.writes[1:]
+    assert b"".join(body_writes) == b"x" * 3000
+    assert max(len(chunk) for chunk in body_writes) <= 1024
