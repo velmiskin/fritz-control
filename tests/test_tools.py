@@ -205,7 +205,7 @@ def test_dashboard_probe_is_read_only_and_uses_config_password(tmp_path):
                 "/api/status": b'{"recovery_ok":true,"clock_synchronized":true}',
                 "/api/timers": b'{"timers":[]}',
                 "/api/schedules": b'{"policies":[]}',
-                "/api/devices": b'{"devices":[]}',
+                "/api/devices?offset=0&limit=8": b'{"devices":[],"total":0}',
             }
             cookie = "fc_session=session; Path=/" if self.path == "/api/login" else ""
             return Response(bodies[self.path], cookie)

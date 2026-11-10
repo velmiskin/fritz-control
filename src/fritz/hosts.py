@@ -128,3 +128,20 @@ class HostsService:
                 log.warn(f"Failed to fetch host index {i}: {e}")
 
         return hosts
+
+    async def get_hosts_page(self, offset=0, limit=8):
+        """Return a bounded page without fetching preceding host entries."""
+        if type(offset) is not int or offset < 0:
+            raise ValueError("Host page offset must be a non-negative integer")
+        if type(limit) is not int or limit < 1 or limit > 8:
+            raise ValueError("Host page limit must be between 1 and 8")
+        total = await self.get_host_number_of_entries()
+        hosts = []
+        for index in range(offset, min(total, offset + limit)):
+            try:
+                hosts.append(await self.get_generic_host_entry(index))
+            except TR064Error as exc:
+                if exc.error_code == 714:
+                    break
+                raise
+        return {"devices": hosts, "total": total, "offset": offset}

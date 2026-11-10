@@ -50,11 +50,24 @@ def probe_dashboard(host, port, config_path, connection_factory=None):
         _, status_body = _request(connection, "GET", "/api/status", headers=headers)
         _, timers_body = _request(connection, "GET", "/api/timers", headers=headers)
         _, schedules_body = _request(connection, "GET", "/api/schedules", headers=headers)
-        _, devices_body = _request(connection, "GET", "/api/devices", headers=headers)
         status = json.loads(status_body.decode("utf-8"))
         timers = json.loads(timers_body.decode("utf-8"))["timers"]
         schedules = json.loads(schedules_body.decode("utf-8"))["policies"]
-        devices = json.loads(devices_body.decode("utf-8"))["devices"]
+        devices = []
+        offset = 0
+        total = 1
+        while offset < total:
+            _, devices_body = _request(
+                connection, "GET",
+                "/api/devices?offset={}&limit=8".format(offset),
+                headers=headers,
+            )
+            page = json.loads(devices_body.decode("utf-8"))
+            devices.extend(page["devices"])
+            total = page["total"]
+            offset += len(page["devices"])
+            if not page["devices"]:
+                break
         print("dashboard_probe PASS")
         print("recovery_ok", status.get("recovery_ok"))
         print("clock_synchronized", status.get("clock_synchronized"))

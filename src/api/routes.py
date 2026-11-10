@@ -42,7 +42,17 @@ class APIRouter:
 
     async def _devices(self, request):
         self._auth(request)
-        return Response.json({"devices": await self.hosts.get_all_hosts(limit=64)})
+        parameters = {}
+        for pair in request.query.split("&") if request.query else ():
+            key, separator, value = pair.partition("=")
+            if separator:
+                parameters[key] = value
+        try:
+            offset = int(parameters.get("offset", "0"))
+            limit = int(parameters.get("limit", "8"))
+        except ValueError as exc:
+            raise HTTPError(400, "Invalid device page") from exc
+        return Response.json(await self.hosts.get_hosts_page(offset, limit))
 
     async def _status(self, request):
         _, session = self._auth(request)

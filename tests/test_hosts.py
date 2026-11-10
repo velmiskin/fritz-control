@@ -105,6 +105,24 @@ def test_hosts_get_all_hosts_with_714_termination():
         assert hosts[0]["hostname"] == "Kids-Tablet"
     asyncio.run(run())
 
+def test_hosts_page_fetches_only_requested_indices():
+    async def run():
+        service = HostsService(MagicMock(spec=TR064Client))
+        service.get_host_number_of_entries = AsyncMock(return_value=20)
+        service.get_generic_host_entry = AsyncMock(
+            side_effect=lambda index: {"index": index}
+        )
+        page = await service.get_hosts_page(offset=8, limit=4)
+        assert page == {
+            "devices": [{"index": 8}, {"index": 9}, {"index": 10}, {"index": 11}],
+            "total": 20,
+            "offset": 8,
+        }
+        assert [call.args[0] for call in service.get_generic_host_entry.await_args_list] == [
+            8, 9, 10, 11
+        ]
+    asyncio.run(run())
+
 def test_tr064_digest_auth_header_generation():
     client = TR064Client(username="testuser", password="secretpassword")
     
