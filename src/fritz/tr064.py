@@ -292,7 +292,10 @@ class TR064Client:
                 if not line:
                     raise TR064Error("HTTP headers ended unexpectedly")
                 try:
-                    header_line = line.decode("iso-8859-1").strip()
+                    # MicroPython builds do not necessarily include the
+                    # ISO-8859-1 codec. TR-064 headers emitted and consumed by
+                    # this client are ASCII; reject unexpected octets.
+                    header_line = line.decode("ascii").strip()
                 except UnicodeError:
                     raise TR064Error("Invalid HTTP header encoding")
                 if ":" not in header_line:

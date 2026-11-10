@@ -83,7 +83,7 @@ arguments.
   - `python tools/deploy.py --dry-run`
   - `python tools/hardware_smoke.py COM3`
   - `python tools/router_probe.py --host 192.168.178.1`
-- Host result: **52 tests passed** on Python 3.15.2.
+- Host result: **54 tests passed** on Python 3.15.2.
 - Wire-level tests use a real local asyncio TCP server for Digest retry, UTF-8
   Content-Length, chunked responses, HTTP 500 SOAP Faults, malformed/oversized
   responses and timeouts.
@@ -92,7 +92,13 @@ arguments.
 - Router result: the read-only project probe reached a FRITZ!Box 6690 Cable with
   FRITZ!OS 8.25 over port 49000. HostFilter advertised 10 actions and Hosts
   advertised 21; every action required by the current services was present.
-- The ESP32 Wi-Fi interface remained inactive and no credential file was used.
+- The initial isolated smoke kept Wi-Fi inactive and used no credential file.
+  A later Phase 1 acceptance run temporarily staged the ignored configuration,
+  connected the ESP32 to Wi-Fi, authenticated to the router, and completed
+  read-only Hosts discovery. The staging directory was removed afterward.
+- That live run exposed an unavailable `iso-8859-1` codec in MicroPython 1.29.0.
+  HTTP response headers now use strict ASCII decoding and reject unexpected
+  octets instead of depending on an optional codec.
 - An authenticated attempt for the explicitly selected `192.168.178.30` was
   initially rejected because `admin` was not the hidden automatically generated
   FRITZ!Box username. The public AVM login endpoint identified the hidden last
@@ -109,9 +115,8 @@ arguments.
   a subsequent authenticated read confirmed `disallow=false` and
   `wan_access=granted`. The CLI verification window was therefore increased to
   ten attempts while preserving fail-closed handling of invalid responses.
-- Phase 2 WAN control and the Phase 2.5 block/unblock acceptance gate are
-  complete. Authenticated Hosts discovery and integrated ESP32 Wi-Fi/router
-  acceptance remain open for the Phase 1 hardware gate.
+- Phase 1 discovery, Phase 2 WAN control and the Phase 2.5 acceptance gates are
+  complete on the target ESP32/router combination.
 
 ## 6. Alternatives Considered & Trade-offs
 
@@ -126,14 +131,16 @@ arguments.
 
 ## 7. Next Steps
 
-Connect the ESP32 to the intended Wi-Fi and run authenticated Hosts discovery
-without changing router state. Record that Phase 1 hardware evidence before
-beginning the Phase 3 scheduling and reboot-recovery milestone.
+Begin the Phase 3 scheduling and reboot-recovery milestone, preserving the rule
+that recovery must never unblock devices before time synchronization and router
+state reconciliation.
 
 ## 8. Traceability
 
 - Roadmap: Phase 2.5.
 - Specifications: `docs/references/README.md`.
 - Hardware smoke runner: `tools/hardware_smoke.py`; device script: `tests/hardware/phase25_smoke.py`.
+- Hardware discovery runner: `tools/hardware_discovery.py`; device script:
+  `tests/hardware/phase1_discovery.py`.
 - Router probe: `tools/router_probe.py`.
 - Live router SCPD paths: `/hostsSCPD.xml` and `/x_hostfilterSCPD.xml`.

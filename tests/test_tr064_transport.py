@@ -120,6 +120,7 @@ def test_oversized_and_malformed_responses_fail_closed():
     async def run():
         await run_case(b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\n")
         await run_case(b"NOT-HTTP\r\n\r\n")
+        await run_case(b"HTTP/1.1 200 OK\r\nX-Invalid: \xff\r\n\r\n")
     asyncio.run(run())
 
 

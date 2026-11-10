@@ -13,16 +13,15 @@ runs on the ESP32.
 | Area | Status | Evidence |
 |---|---|---|
 | Project and agent workflow | Complete | DR-000, DR-003 |
-| SOAP and Hosts modules | Transport-tested; authenticated discovery pending | DR-001, DR-004 |
+| SOAP and Hosts modules | ESP32/router hardware accepted | DR-001, DR-004 |
 | HostFilter WAN control | Live block/unblock accepted | DR-002, DR-004 |
 | TR-064 transport on ESP32 | Import/async smoke-tested | DR-004 |
 | Timers and reboot recovery | Not started | Phase 3 |
 | HTTP API and dashboard | Not started | Phase 4 |
 
 Known limitations are tracked in `ROADMAP.md`. HTTPS is explicitly rejected
-until certificate validation and heap impact are designed. Authenticated Hosts
-discovery and integrated ESP32 Wi-Fi/router acceptance remain required before
-scheduling is implemented.
+until certificate validation and heap impact are designed. The firmware
+entrypoint is not integrated yet; scheduling and reboot recovery are next.
 
 ## Development setup
 
@@ -56,6 +55,11 @@ Run the reproducible ESP32 smoke test with
 `python tools/hardware_smoke.py COM3`. It stages candidate modules under a
 temporary `/phase25_smoke` directory, cleans it afterward, and never uses Wi-Fi
 credentials or changes router state.
+
+Run authenticated, read-only Hosts discovery with
+`python tools/hardware_discovery.py COM3 --config config.json`. The runner
+temporarily stages the ignored configuration, prints no credentials or device
+identifiers, and removes the staging directory afterward.
 
 Probe the router's public SCPD documents without credentials or state changes
 with `python tools/router_probe.py --host 192.168.178.1`.

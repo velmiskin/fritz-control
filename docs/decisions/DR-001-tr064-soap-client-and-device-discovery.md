@@ -1,11 +1,12 @@
 # Decision Report: [DR-001] TR-064 SOAP Client & Device Discovery (Hosts:1)
 
 **Date:** 2026-11-04  
+**Last Hardware Verification:** 2026-11-10
 **Status:** Accepted  
 **Author:** AI Agent & Engineering Team  
 **Related Milestone/Feature:** Phase 1 — TR-064 Core & Device Discovery (`Hosts:1`)
-**Evidence Level:** Unit/mock tested; prior live router check recorded, ESP32 acceptance pending<br>
-**Tested Versions:** CPython host tests; MicroPython and heap metrics not recorded
+**Evidence Level:** Hardware accepted
+**Tested Versions:** Python 3.15.2; MicroPython 1.29.0 ESP32_GENERIC; FRITZ!Box 6690 Cable, FRITZ!OS 8.25
 
 ---
 
@@ -36,8 +37,13 @@ Key challenges and constraints:
 ## 3. Resource & Hardware Impact (ESP32 Constraints)
 - **RAM / Memory Allocation:**
   - Targeted string parsing avoids allocating an XML DOM.
-  - The current transport receives 1024-byte chunks but accumulates them before joining the complete body. Peak heap use is not bounded or measured yet and must be addressed in Phase 2.5.
+  - SOAP responses are bounded to 16 KiB and SCPD documents to 32 KiB before
+    parsing; connection-close bodies are accumulated in one bounded bytearray.
   - `gc.collect()` called immediately after connection teardown.
+  - During authenticated ESP32 discovery, observed free heap after collection
+    was 109,152 bytes before Wi-Fi connection, 108,912 after connection, and
+    99,728 after SCPD discovery plus two Hosts SOAP actions. These are point
+    observations, not peak-allocation measurements.
 - **Async Event Loop:**
   - All network I/O utilizes non-blocking `asyncio` / `uasyncio` streams with strict 10-second timeouts, preventing hangs if the router is busy.
 
@@ -59,12 +65,30 @@ Key challenges and constraints:
   - Historical result at milestone completion: **16 passed in 0.09s** via `pytest`.
 - **Live Router Connectivity Check:**
   - Successfully retrieved `tr64desc.xml` and `hostsSCPD.xml` directly from FRITZ!Box 6690 Cable (`192.168.178.1:49000`), verifying actual action definitions.
-  - This was a manual check recorded by the prior development session. The repository does not yet contain a repeatable hardware acceptance script or the tested FRITZ!OS/MicroPython versions.
-- **Known gaps:** byte-accurate HTTP framing, bounded response size, HTTPS behavior, wire-level Digest tests, and ESP32 heap measurements remain pending.
+  - `python tools/hardware_discovery.py COM3 --config config.json` temporarily
+    staged the candidate modules and ignored configuration on the ESP32. The
+    board connected to Wi-Fi, completed Digest authentication, advertised both
+    required Hosts actions, returned 33 entries from `GetHostNumberOfEntries`,
+    and returned a valid first `GetGenericHostEntry` containing IP and MAC.
+    No router state was changed and the staging directory was removed.
+  - The first hardware attempt exposed that the MicroPython build lacks the
+    `iso-8859-1` codec. HTTP header parsing now uses strict ASCII, matching the
+    headers generated and required by this client; unexpected octets fail closed.
+- **Current host result:** **54 tests passed** on Python 3.15.2, including
+  wire-level Digest, framing, malformed-header and timeout coverage.
+- **Known gaps:** the full firmware entrypoint, long-running reconnect behavior,
+  timers and reboot recovery are not yet integrated.
 
 ## 6. Alternatives Considered & Trade-offs
 - *Alternative 1: `micropython-xml` or regex-based tree parser.* Rejected because tree construction uses excessive heap and is prone to fragmentation.
 - *Alternative 2: Fetching the entire device list as one giant XML file via `X_AVM-DE_GetHostListPath`.* Rejected for MVP because a 60+ device network generates a 30KB+ XML file that can easily cause memory allocation spikes on ESP32. Fetching entry-by-entry with `GetGenericHostEntry` guarantees flat, predictable RAM consumption per query.
 
 ## 7. Next Steps
-- Proceed to **Phase 2 (DR-002)**: Implement `src/fritz/host_filter.py` (`DisallowWANAccessByIP`, `GetWANAccessByIP`) to control internet access per device with post-command verification.
+- Proceed to **Phase 3**: implement persistent timer state, NTP synchronization,
+  scheduling, and fail-safe reboot recovery without automatic unblocking.
+
+## 8. Traceability
+- Roadmap: Phase 1.
+- Hardware runner: `tools/hardware_discovery.py`; device script:
+  `tests/hardware/phase1_discovery.py`.
+- Live router SCPD path: `/hostsSCPD.xml`.

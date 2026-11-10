@@ -10,7 +10,7 @@ Every milestone must end with code verification, test passing, and a completed *
 |---|---|---|---|
 | **Phase 0** | Project Structure, Environment & Agent Rules | 🟢 Completed | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
 | **Phase 0.1** | Development Workflow & Evidence Hardening | 🟢 Completed | [DR-003](docs/decisions/DR-003-development-workflow-and-evidence.md) |
-| **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟡 Transport-Tested | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
+| **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟢 Hardware Accepted | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟢 Hardware Accepted | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | 🟢 Completed | [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 3** | Timers, Scheduling & State Persistence | ⚪ Not Started | - |
@@ -42,7 +42,7 @@ Every milestone must end with code verification, test passing, and a completed *
 
 ---
 
-### Phase 1: TR-064 Core & Device Discovery (`Hosts:1`) 🟡
+### Phase 1: TR-064 Core & Device Discovery (`Hosts:1`) 🟢
 - [x] Implement `src/core/config.py` (safe JSON config loader).
 - [x] Implement `src/fritz/soap.py` (MicroPython lightweight SOAP 1.1 HTTP request generator & parser).
 - [x] Implement `src/fritz/tr064.py` (TR-064 client with transparent HTTP Digest Authentication).
@@ -50,7 +50,7 @@ Every milestone must end with code verification, test passing, and a completed *
 - [x] Create mock SOAP responses in `tests/mocks/` for local testing.
 - [x] Write unit tests `tests/test_config.py`, `tests/test_soap.py`, and `tests/test_hosts.py`.
 - [x] Complete **[DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md)**.
-- [ ] Complete ESP32/router acceptance through Phase 2.5.
+- [x] Complete ESP32/router acceptance through Phase 2.5.
 
 ---
 
