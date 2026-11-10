@@ -32,7 +32,9 @@ def probe_dashboard(host, port, config_path, connection_factory=None):
     if not isinstance(password, str) or len(password) < 12:
         raise RuntimeError("Configuration requires a unique web admin password")
     factory = connection_factory or http.client.HTTPConnection
-    connection = factory(host, port, timeout=30)
+    # Entry-by-entry Hosts:1 discovery is deliberately sequential on the ESP32
+    # and can take over 30 seconds on a populated router.
+    connection = factory(host, port, timeout=90)
     try:
         _, page = _request(connection, "GET", "/")
         if b"FritzControl" not in page:
