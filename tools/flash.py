@@ -1,32 +1,51 @@
-"""
-tools/flash.py - Erase flash and flash MicroPython firmware to ESP32
+"""Erase an ESP32 and flash a selected MicroPython firmware image."""
 
-Usage:
-    python tools/flash.py COM3 firmware/esp32-20230426-v1.20.0.bin
-"""
-
-import sys
+import argparse
+from pathlib import Path
 import subprocess
+import sys
 
-def main():
-    if len(sys.argv) < 3:
-        print("Usage: python tools/flash.py <COM_PORT> <FIRMWARE_BIN_PATH>")
-        print("Example: python tools/flash.py COM3 firmware/esp32-ESP32_GENERIC-20240222-v1.22.2.bin")
-        sys.exit(1)
 
-    port = sys.argv[1]
-    firmware_path = sys.argv[2]
+def build_parser():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("port", help="serial port, for example COM3")
+    parser.add_argument("firmware", type=Path, help="path to a .bin firmware image")
+    parser.add_argument("--yes", action="store_true",
+                        help="confirm destructive flash erase without prompting")
+    return parser
 
-    print(f"Erasing flash on {port}...")
-    subprocess.run(f"python -m esptool --port {port} erase_flash", shell=True, check=True)
 
-    print(f"Flashing firmware {firmware_path} to {port}...")
-    subprocess.run(
-        f"python -m esptool --chip esp32 --port {port} --baud 460800 write_flash -z 0x1000 {firmware_path}",
-        shell=True,
-        check=True
-    )
-    print("Flashing completed successfully!")
+def flash(port, firmware, confirmed=False, input_func=input):
+    firmware = firmware.resolve()
+    if not firmware.is_file():
+        raise ValueError("Firmware image does not exist: {}".format(firmware))
+    if firmware.suffix.lower() != ".bin":
+        raise ValueError("Firmware image must use the .bin extension")
+    if not confirmed:
+        answer = input_func(
+            "This will erase all data on {}. Type the port name to continue: ".format(port)
+        )
+        if answer.strip() != port:
+            raise ValueError("Flash cancelled")
+
+    base = [sys.executable, "-m", "esptool", "--port", port]
+    subprocess.run(base + ["erase_flash"], check=True)
+    subprocess.run(base + [
+        "--chip", "esp32", "--baud", "460800", "write_flash", "-z",
+        "0x1000", str(firmware),
+    ], check=True)
+    print("Flashing completed successfully and all commands returned zero.")
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    try:
+        flash(args.port, args.firmware, confirmed=args.yes)
+    except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+        print("Flashing failed: {}".format(exc))
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

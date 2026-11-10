@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 from fritz.tr064 import TR064Client, TR064Error
 from fritz.host_filter import HostFilterService
+from fritz.capabilities import ServiceCapabilities
 
 MOCKS_DIR = os.path.join(os.path.dirname(__file__), "mocks")
 
@@ -44,6 +45,47 @@ def test_host_filter_get_wan_access_disallowed():
         assert status["ip"] == "192.168.178.20"
         assert status["disallow"] is True
         assert status["wan_access"] == "denied"
+    asyncio.run(run())
+
+def test_host_filter_rejects_missing_or_error_state_as_verified():
+    async def run():
+        client = MagicMock(spec=TR064Client)
+        client.call_action = AsyncMock(return_value="<NewDisallow>0</NewDisallow>")
+        service = HostFilterService(client)
+        with pytest.raises(TR064Error):
+            await service.get_wan_access_by_ip("192.168.178.20")
+
+        client.call_action = AsyncMock(return_value=(
+            "<NewDisallow>0</NewDisallow><NewWANAccess>error</NewWANAccess>"
+        ))
+        status = await service.set_wan_access_and_verify(
+            "192.168.178.20", disallow=False, retries=1, delay_sec=0
+        )
+        assert status["verified"] is False
+        assert status["reason"] == "router_state_error"
+    asyncio.run(run())
+
+def test_unblock_override_is_not_effective_when_profile_denies():
+    async def run():
+        client = MagicMock(spec=TR064Client)
+        client.call_action = AsyncMock(return_value=(
+            "<NewDisallow>0</NewDisallow><NewWANAccess>denied</NewWANAccess>"
+        ))
+        service = HostFilterService(client)
+        status = await service.set_wan_access_and_verify(
+            "192.168.178.20", disallow=False, retries=1, delay_sec=0
+        )
+        assert status["override_applied"] is True
+        assert status["verified"] is False
+        assert status["reason"] == "filter_profile_denied"
+    asyncio.run(run())
+
+@pytest.mark.parametrize("address", ["", "1.2.3", "1.2.3.999", "01.2.3.4", "a.b.c.d"])
+def test_host_filter_rejects_invalid_ipv4(address):
+    async def run():
+        service = HostFilterService(MagicMock(spec=TR064Client))
+        with pytest.raises(ValueError):
+            await service.get_wan_access_by_ip(address)
     asyncio.run(run())
 
 def test_host_filter_disallow_wan_access():
@@ -98,6 +140,29 @@ def test_host_filter_set_and_verify_success():
         assert call_count == 2
     asyncio.run(run())
 
+def test_host_filter_verification_retries_transient_invalid_state():
+    async def run():
+        client = MagicMock(spec=TR064Client)
+        call_count = 0
+
+        async def mock_call(control_url, service_type, action_name, params=None):
+            nonlocal call_count
+            if action_name == "DisallowWANAccessByIP":
+                return load_mock("host_filter_disallow_response.xml")
+            call_count += 1
+            if call_count == 1:
+                return "<NewDisallow>1</NewDisallow>"
+            return load_mock("host_filter_get_wan_disallowed.xml")
+
+        client.call_action = AsyncMock(side_effect=mock_call)
+        service = HostFilterService(client)
+        result = await service.set_wan_access_and_verify(
+            "192.168.178.30", disallow=True, retries=2, delay_sec=0
+        )
+        assert result["verified"] is True
+        assert call_count == 2
+    asyncio.run(run())
+
 def test_host_filter_batch_wan_access():
     async def run():
         client = MagicMock(spec=TR064Client)
@@ -124,7 +189,8 @@ def test_host_filter_get_host_entry_by_ip():
         client = MagicMock(spec=TR064Client)
         client.call_action = AsyncMock(return_value=load_mock("host_filter_host_entry.xml"))
 
-        service = HostFilterService(client)
+        capabilities = ServiceCapabilities("urn:test", "/scpd", ["GetHostEntryByIP"])
+        service = HostFilterService(client, capabilities=capabilities)
         entry = await service.get_host_entry_by_ip("192.168.178.20")
         assert entry["ip"] == "192.168.178.20"
         assert entry["hostname"] == "Kids-Tablet"
@@ -132,4 +198,14 @@ def test_host_filter_get_host_entry_by_ip():
         assert entry["time_used"] == 1800
         assert entry["time_max"] == 7200
         assert entry["wan_access"] == "granted"
+    asyncio.run(run())
+
+def test_host_filter_rejects_unadvertised_optional_action():
+    async def run():
+        client = MagicMock(spec=TR064Client)
+        capabilities = ServiceCapabilities("urn:test", "/scpd", [])
+        service = HostFilterService(client, capabilities=capabilities)
+        with pytest.raises(TR064Error, match="does not advertise"):
+            await service.get_host_entry_by_ip("192.168.178.20")
+        client.call_action.assert_not_called()
     asyncio.run(run())

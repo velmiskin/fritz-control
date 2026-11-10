@@ -22,6 +22,17 @@ def test_build_soap_envelope_with_params():
     assert "<NewIndex>5</NewIndex>" in xml
     assert "<u:GetGenericHostEntry xmlns:u=\"urn:dslforum-org:service:Hosts:1\">" in xml
 
+def test_build_soap_envelope_escapes_values_and_rejects_tag_injection():
+    xml = build_soap_envelope(
+        "urn:test&service", "Action", {"NewName": "A&B <tablet>"}
+    )
+    assert 'xmlns:u="urn:test&amp;service"' in xml
+    assert "<NewName>A&amp;B &lt;tablet&gt;</NewName>" in xml
+    with pytest.raises(ValueError):
+        build_soap_envelope("urn:test", "Bad<Action")
+    with pytest.raises(ValueError):
+        build_soap_envelope("urn:test", "Action", {"Bad<Tag": "value"})
+
 def test_extract_tag_value_basic():
     xml = "<data><NewHostNumberOfEntries>42</NewHostNumberOfEntries></data>"
     val = extract_tag_value(xml, "NewHostNumberOfEntries")
@@ -63,3 +74,14 @@ def test_parse_soap_fault_on_valid_response():
 
     fault = parse_soap_fault(xml)
     assert fault is None
+
+def test_parse_namespaced_fault_with_different_prefix():
+    xml = (
+        '<env:Envelope><env:Body><env:Fault><faultcode>env:Client</faultcode>'
+        '<detail><upnp:errorCode>402</upnp:errorCode>'
+        '<upnp:errorDescription>Invalid Args</upnp:errorDescription></detail>'
+        '</env:Fault></env:Body></env:Envelope>'
+    )
+    fault = parse_soap_fault(xml)
+    assert fault["error_code"] == 402
+    assert fault["error_description"] == "Invalid Args"

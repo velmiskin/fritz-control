@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 from fritz.tr064 import TR064Client, TR064Error
 from fritz.hosts import HostsService
+from fritz.capabilities import ServiceCapabilities
 
 MOCKS_DIR = os.path.join(os.path.dirname(__file__), "mocks")
 
@@ -30,6 +31,26 @@ def test_hosts_get_number_of_entries():
         )
     asyncio.run(run())
 
+def test_hosts_rejects_unadvertised_optional_action():
+    async def run():
+        client = MagicMock(spec=TR064Client)
+        service = HostsService(
+            client, capabilities=ServiceCapabilities("urn:test", "/scpd", [])
+        )
+        with pytest.raises(TR064Error, match="does not advertise"):
+            await service.get_specific_host_by_ip("192.168.178.20")
+        client.call_action.assert_not_called()
+    asyncio.run(run())
+
+def test_hosts_rejects_invalid_ipv4_before_router_call():
+    async def run():
+        client = MagicMock(spec=TR064Client)
+        service = HostsService(client)
+        with pytest.raises(ValueError):
+            await service.get_specific_host_by_ip("192.168.1.999")
+        client.call_action.assert_not_called()
+    asyncio.run(run())
+
 def test_hosts_get_generic_host_entry():
     async def run():
         client = MagicMock(spec=TR064Client)
@@ -50,7 +71,10 @@ def test_hosts_get_specific_host_by_ip():
         client = MagicMock(spec=TR064Client)
         client.call_action = AsyncMock(return_value=load_mock("hosts_specific_ip.xml"))
 
-        service = HostsService(client)
+        capabilities = ServiceCapabilities(
+            "urn:test", "/scpd", ["X_AVM-DE_GetSpecificHostEntryByIP"]
+        )
+        service = HostsService(client, capabilities=capabilities)
         host = await service.get_specific_host_by_ip("192.168.178.20")
         assert host["ip"] == "192.168.178.20"
         assert host["friendly_name"] == "Kid Tablet Pro"

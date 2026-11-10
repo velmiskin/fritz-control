@@ -19,7 +19,7 @@ A rigid agentic framework with strict guardrails and mandatory post-feature deci
 1. **Modular Architecture:** Split the code into independent, loosely coupled layers:
    - `core/`: system primitives (config, storage, logger, watchdog).
    - `fritz/`: dedicated TR-064 protocol engine (SOAP generator, Hosts:1, HostFilter:1).
-   - `network/`: Wi-Fi lifecycle, NTP time, and `uasyncio` HTTP server.
+   - `net/`: Wi-Fi lifecycle, NTP time, and `uasyncio` HTTP server. The original `network/` name was replaced because it shadows MicroPython's built-in `network` module.
    - `services/`: higher-level business logic (device management, access timer state machine, weekly schedules, recovery).
    - `api/`: REST endpoints separating business logic from presentation.
    - `www/`: static web assets stored in Flash and streamed to clients.

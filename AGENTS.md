@@ -64,7 +64,7 @@ FritzControl/
 │   ├── main.py          # Entrypoint, asyncio loop initialization
 │   ├── core/            # System services: config, storage (NVS/JSON), logger, watchdog
 │   ├── fritz/           # TR-064 SOAP client, Hosts:1, HostFilter:1 parsers
-│   ├── network/         # Wi-Fi manager (STA/AP fallback), NTP client, async HTTP server
+│   ├── net/             # Wi-Fi manager, NTP client, async HTTP server (avoids MicroPython's built-in `network` name)
 │   ├── services/        # Business logic: device_manager, access_manager, scheduler, recovery
 │   └── api/             # REST API routes and token/cookie auth
 ├── www/                 # Frontend assets stored in Flash (HTML, CSS, JS)

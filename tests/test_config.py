@@ -12,6 +12,7 @@ def test_config_defaults():
     cfg = Config()
     assert cfg.fritz_host == "192.168.178.1"
     assert cfg.fritz_port == 49000
+    assert cfg.fritz_use_ssl is False
     assert cfg.get("web", "port") == 80
     assert cfg.get("system", "watchdog_timeout_sec") == 60
 
@@ -31,6 +32,7 @@ def test_config_load_file():
         cfg = Config.load(temp_path)
         assert cfg.fritz_host == "192.168.1.1"
         assert cfg.fritz_port == 49443
+        assert cfg.fritz_use_ssl is True
         assert cfg.fritz_user == "admin"
         # Verify defaults are preserved for unmentioned fields
         assert cfg.get("web", "port") == 80

@@ -10,9 +10,9 @@ Every milestone must end with code verification, test passing, and a completed *
 |---|---|---|---|
 | **Phase 0** | Project Structure, Environment & Agent Rules | 🟢 Completed | [DR-000](docs/decisions/DR-000-project-setup-and-agent-framework.md) |
 | **Phase 0.1** | Development Workflow & Evidence Hardening | 🟢 Completed | [DR-003](docs/decisions/DR-003-development-workflow-and-evidence.md) |
-| **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟡 Mock-Tested | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md) |
-| **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟡 Mock-Tested | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md) |
-| **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | ⚪ Not Started | - |
+| **Phase 1** | TR-064 Core & Device Discovery (`Hosts:1`) | 🟡 Transport-Tested | [DR-001](docs/decisions/DR-001-tr064-soap-client-and-device-discovery.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
+| **Phase 2** | WAN Block / Unblock (`HostFilter:1`) | 🟡 Transport-Tested | [DR-002](docs/decisions/DR-002-wan-hostfilter-control.md), [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
+| **Phase 2.5** | TR-064 Transport, Semantics & Hardware Acceptance | 🟡 Live Block Verified | [DR-004](docs/decisions/DR-004-tr064-transport-hardening.md) |
 | **Phase 3** | Timers, Scheduling & State Persistence | ⚪ Not Started | - |
 | **Phase 4** | Web Server & Dashboard UI | ⚪ Not Started | - |
 | **Phase 5** | Security, Authentication & WireGuard Remote Access | ⚪ Not Started | - |
@@ -64,24 +64,27 @@ Every milestone must end with code verification, test passing, and a completed *
 - [x] Complete **[DR-002](docs/decisions/DR-002-wan-hostfilter-control.md)**.
 - [ ] Complete effective-WAN and hardware acceptance through Phase 2.5.
 
-### Phase 2.5: TR-064 Transport, Semantics & Hardware Acceptance ⚪
-- [ ] Verify effective WAN state, not only the `NewDisallow` override flag.
-- [ ] Treat missing, invalid and `WANAccess="error"` states as unknown/failure, never as allowed.
-- [ ] Add byte-accurate HTTP framing, bounded response reads and explicit protocol errors.
-- [ ] Add XML escaping, IPv4 validation and robust Digest challenge handling.
-- [ ] Either implement and measure HTTPS on MicroPython or reject `use_ssl=true` explicitly.
-- [ ] Add wire-level fake-router tests for 401, SOAP faults, timeouts and malformed responses.
-- [ ] Capability-detect optional actions from the live router SCPD.
-- [ ] Implement Wi-Fi connection and auto-reconnect required for hardware integration.
-- [ ] Record ESP32 heap metrics and FRITZ!Box hardware acceptance with exact versions.
-- [ ] Harden `tools/deploy.py` and `tools/flash.py` argument handling and success reporting.
-- [ ] Complete **DR-004: TR-064 Transport & Hardware Acceptance**.
+### Phase 2.5: TR-064 Transport, Semantics & Hardware Acceptance 🟡
+- [x] Verify effective WAN state, not only the `NewDisallow` override flag.
+- [x] Treat missing, invalid and `WANAccess="error"` states as unknown/failure, never as allowed.
+- [x] Add byte-accurate HTTP framing, bounded response reads and explicit protocol errors.
+- [x] Add XML escaping, IPv4 validation and robust Digest challenge handling.
+- [x] Reject `use_ssl=true` explicitly until certificate validation and heap impact are designed.
+- [x] Add wire-level fake-router tests for 401, SOAP faults, timeouts and malformed responses.
+- [x] Capability-detect optional actions from the live router SCPD.
+- [x] Implement Wi-Fi connection and auto-reconnect required for hardware integration.
+- [x] Record an isolated ESP32 import/async smoke test and post-GC heap observations.
+- [x] Verify the target model, FRITZ!OS version and required live SCPD actions with the project transport.
+- [x] Verify authenticated status and blocking on the explicitly selected test device `192.168.178.30`.
+- [ ] Verify unblocking only after explicit user authorization; do not undo the requested block automatically.
+- [x] Harden `tools/deploy.py` and `tools/flash.py` argument handling and success reporting.
+- [x] Document the transport-tested implementation in **[DR-004](docs/decisions/DR-004-tr064-transport-hardening.md)**.
 
 ---
 
 ### Phase 3: Timers, Scheduling & State Persistence ⚪
 - [ ] Implement `src/core/storage.py` (Flash NV-storage for active timer state).
-- [ ] Implement `src/network/ntp.py` (NTP client for accurate time synchronization).
+- [ ] Implement `src/net/ntp.py` (NTP client for accurate time synchronization).
 - [ ] Implement `src/services/access_manager.py` (15m, 30m, 1h, 2h, custom durations).
 - [ ] Implement `src/services/scheduler.py` (day-of-week interval schedules).
 - [ ] Implement `src/services/recovery.py` (fail-safe reboot recovery without inadvertent unblocking).
@@ -91,7 +94,7 @@ Every milestone must end with code verification, test passing, and a completed *
 ---
 
 ### Phase 4: Web Server & Dashboard UI ⚪
-- [ ] Implement `src/network/http_server.py` (`uasyncio` streaming HTTP/1.1 server).
+- [ ] Implement `src/net/http_server.py` (`uasyncio` streaming HTTP/1.1 server).
 - [ ] Implement chunked static file serving from Flash (`www/`).
 - [ ] Implement REST API in `src/api/routes.py` (`/api/devices`, `/api/block`, `/api/unblock`, `/api/timer`).
 - [ ] Remove the runtime `admin` password default and refuse empty, placeholder or default credentials.

@@ -4,15 +4,32 @@ Implements TR-064 device discovery adhering to urn:dslforum-org:service:Hosts:1.
 """
 
 from core.logger import log
+from fritz.capabilities import ServiceCapabilities
 from fritz.soap import parse_soap_response, extract_tag_value
 from fritz.tr064 import TR064Error
+from fritz.validation import validate_ipv4
 
 HOSTS_SERVICE_TYPE = "urn:dslforum-org:service:Hosts:1"
 HOSTS_CONTROL_URL = "/upnp/control/hosts"
+HOSTS_SCPD_URL = "/hostsSCPD.xml"
 
 class HostsService:
-    def __init__(self, client):
+    def __init__(self, client, capabilities=None):
         self.client = client
+        self.capabilities = capabilities
+
+    async def discover_capabilities(self):
+        self.capabilities = await ServiceCapabilities.discover(
+            self.client, HOSTS_SERVICE_TYPE, HOSTS_SCPD_URL
+        )
+        return self.capabilities
+
+    async def _require_action(self, action_name):
+        capabilities = self.capabilities
+        if capabilities is None:
+            capabilities = await self.discover_capabilities()
+        if not capabilities.supports(action_name):
+            raise TR064Error("Router does not advertise action {}".format(action_name))
 
     async def get_host_number_of_entries(self):
         """
@@ -61,6 +78,8 @@ class HostsService:
         Calls AVM vendor extension X_AVM-DE_GetSpecificHostEntryByIP.
         Returns extended status including WAN access state.
         """
+        ip_address = validate_ipv4(ip_address)
+        await self._require_action("X_AVM-DE_GetSpecificHostEntryByIP")
         body = await self.client.call_action(
             control_url=HOSTS_CONTROL_URL,
             service_type=HOSTS_SERVICE_TYPE,

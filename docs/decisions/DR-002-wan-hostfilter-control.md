@@ -58,4 +58,4 @@ Specific technical constraints and challenges:
 - *Alternative 2: Parallel batch execution (`asyncio.gather`).* Rejected because ESP32 has limited socket handles; opening multiple concurrent TR-064 SSL/TCP connections risks socket starvation and memory allocation spikes.
 
 ## 7. Next Steps
-- Proceed to **Phase 3 (DR-003)**: Timers, Scheduling & State Persistence (`src/services/access_manager.py`, `src/network/ntp.py`, `src/core/storage.py`, reboot recovery).
+- Proceed to Timers, Scheduling & State Persistence (`src/services/access_manager.py`, `src/net/ntp.py`, `src/core/storage.py`, reboot recovery) after transport hardening.

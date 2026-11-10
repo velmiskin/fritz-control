@@ -9,7 +9,9 @@ not every action is available on every FRITZ!OS version.
 | [FRITZ! interface catalogue](https://fritz.com/en/pages/interfaces) | 2026-11-09 | Official document index |
 | [TR-064 HostFilter](https://fritz.support/resources/TR-064_Host_Filter.pdf) | 2025-09-11, version 8 | WAN access and filter profiles |
 | [TR-064 Hosts](https://fritz.support/resources/TR-064_Hosts.pdf) | 2026-01-29, version 32 | Host discovery and host metadata |
-| [MicroPython uasyncio](https://docs.micropython.org/en/latest/library/asyncio.html) | Accessed 2026-11-09 | Supported asynchronous I/O API |
+| [FRITZ!Box login guidance](https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/Recommendations%20for%20user%20guidance%20for%20logging%20into%20a%20FRITZBox_v1.1_EN.pdf) | Version 1.1 | Discovering automatically generated users for password-only UI login |
+| [MicroPython 1.29 asyncio](https://docs.micropython.org/en/v1.29.0/library/asyncio.html) | Accessed 2026-11-10 | Supported asynchronous I/O and TLS context API |
+| [MicroPython 1.29 WLAN](https://docs.micropython.org/en/v1.29.0/library/network.WLAN.html) | Accessed 2026-11-10 | STA connection and status API |
 
 ## Capability verification
 

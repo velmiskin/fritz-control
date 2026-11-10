@@ -91,3 +91,7 @@ class Config:
     @property
     def fritz_password(self):
         return self.get("fritzbox", "password", "")
+
+    @property
+    def fritz_use_ssl(self):
+        return self.get("fritzbox", "use_ssl", False)
