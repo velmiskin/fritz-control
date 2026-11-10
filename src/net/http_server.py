@@ -216,11 +216,13 @@ class AsyncHTTPServer:
                     raise HTTPError(500, "Handler returned invalid response")
             except HTTPError as exc:
                 response = Response.json({"error": exc.message}, exc.status)
-            except TimeoutError:
-                response = Response.json({"error": "request_timeout"}, 408)
             except Exception as exc:
-                log.error("HTTP request failed: {}".format(type(exc).__name__))
-                response = Response.json({"error": "internal_server_error"}, 500)
+                error_name = type(exc).__name__
+                if error_name == "TimeoutError":
+                    response = Response.json({"error": "request_timeout"}, 408)
+                else:
+                    log.error("HTTP request failed: {}".format(error_name))
+                    response = Response.json({"error": "internal_server_error"}, 500)
             try:
                 await self.write_response(writer, response)
             except Exception as exc:
