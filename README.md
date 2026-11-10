@@ -16,7 +16,7 @@ runs on the ESP32.
 | SOAP and Hosts modules | ESP32/router hardware accepted | DR-001, DR-004 |
 | HostFilter WAN control | Live block/unblock accepted | DR-002, DR-004 |
 | TR-064 transport on ESP32 | Import/async smoke-tested | DR-004 |
-| Timers and reboot recovery | Not started | Phase 3 |
+| Timers and reboot recovery | Storage foundation complete; scheduling pending | DR-005 |
 | HTTP API and dashboard | Not started | Phase 4 |
 
 Known limitations are tracked in `ROADMAP.md`. HTTPS is explicitly rejected
